@@ -1,0 +1,60 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Crear Equipo - Panel Admin{% endblock %}
+
+{% block admin_content %}
+<div class="max-w-2xl mx-auto space-y-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-4xl font-gaming font-bold text-success mb-2">➕ Crear Equipo</h1>
+        <p class="opacity-60">Registrar un nuevo equipo en el CTF</p>
+    </div>
+
+    <!-- Form -->
+    <form method="POST" class="card bg-base-300 border border-base-content/10">
+        <div class="card-body space-y-6">
+            {% csrf_token %}
+            
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text font-semibold">Nombre del Equipo</span>
+                </label>
+                <input type="text" name="name" placeholder="Ej: HackerTeam" 
+                       class="input input-bordered" required>
+                <label class="label">
+                    <span class="label-text-alt">El nombre debe ser único</span>
+                </label>
+            </div>
+            
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text font-semibold">Color del Equipo</span>
+                </label>
+                <input type="color" name="color" value="#FF0000" 
+                       class="input input-bordered h-16">
+                <label class="label">
+                    <span class="label-text-alt">Se usará para identificar el equipo visualmente</span>
+                </label>
+            </div>
+
+            <div class="alert alert-info">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                </svg>
+                <div class="text-sm">
+                    <p><strong>Nota:</strong> Después de crear el equipo, podrás agregar miembros desde la página de edición del equipo.</p>
+                </div>
+            </div>
+
+            <div class="card-actions justify-end pt-4 border-t border-base-content/10">
+                <a href="{% url 'admin_panel:teams_list' %}" class="btn btn-ghost">
+                    Cancelar
+                </a>
+                <button type="submit" class="btn btn-success">
+                    ➕ Crear Equipo
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

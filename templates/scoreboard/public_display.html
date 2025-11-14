@@ -1,0 +1,620 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CTF Scoreboard - Public Display</title>
+    
+    <!-- Tailwind CSS + DaisyUI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'gaming': ['Rajdhani', 'sans-serif'],
+                        'mono': ['Space Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Rajdhani', sans-serif;
+        }
+        
+        /* Animaciones */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .slide-in-right {
+            animation: slideInRight 0.6s ease-out;
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .pulse-glow {
+            animation: pulseGlow 0.8s ease-in-out;
+        }
+        
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 0 rgba(0, 255, 65, 0); }
+            50% { box-shadow: 0 0 30px rgba(0, 255, 65, 0.6); }
+        }
+        
+        .rank-up {
+            animation: rankUp 0.8s ease-out;
+        }
+        
+        @keyframes rankUp {
+            0% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.1); color: #00ff41; }
+            100% { transform: translateY(0) scale(1); }
+        }
+        
+        .rank-down {
+            animation: rankDown 0.8s ease-out;
+        }
+        
+        @keyframes rankDown {
+            0% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(20px) scale(0.95); color: #ff4136; }
+            100% { transform: translateY(0) scale(1); }
+        }
+        
+        .first-blood-flash {
+            animation: firstBloodFlash 1s ease-in-out;
+        }
+        
+        @keyframes firstBloodFlash {
+            0%, 100% { background-color: transparent; }
+            50% { background-color: rgba(255, 0, 0, 0.2); }
+        }
+        
+        /* Overlay de notificaciones */
+        .notification-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            padding: 3rem;
+            background: rgba(0, 0, 0, 0.95);
+            border: 3px solid;
+            border-radius: 1rem;
+            text-align: center;
+            animation: notificationPop 2s ease-in-out;
+            max-width: 90%;
+        }
+        
+        @keyframes notificationPop {
+            0% { transform: translate(-50%, -50%) scale(0); opacity: 0; }
+            5% { transform: translate(-50%, -50%) scale(1.2); opacity: 1; }
+            10% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            90% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+            100% { transform: translate(-50%, -50%) scale(0.8); opacity: 0; }
+        }
+    </style>
+</head>
+<body data-theme="dark" class="bg-base-100">
+    <div class="container mx-auto px-8 py-6">
+        <!-- Header -->
+        <div class="text-center mb-6">
+            <h1 class="text-5xl font-gaming font-bold text-success mb-2">CTF SCOREBOARD</h1>
+            <p class="text-lg opacity-60">Clasificación en Tiempo Real</p>
+            <div class="text-sm opacity-40 mt-2" id="lastUpdate">Última actualización: --:--:--</div>
+        </div>
+
+        <!-- Score Timeline Chart -->
+        <div class="mb-6">
+            <div class="card bg-base-300 border border-base-content/10">
+                <div class="card-body p-6">
+                    <h2 class="text-3xl font-gaming font-bold mb-4 text-center">📊 Progreso de Equipos</h2>
+                    <div class="w-full h-80">
+                        <canvas id="scoreTimelineChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <!-- Main Scoreboard -->
+            <div class="xl:col-span-2">
+                <div class="card bg-base-300 border border-base-content/10">
+                    <div class="card-body p-6">
+                        <h2 class="text-3xl font-gaming font-bold mb-4 text-center">Rankings</h2>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="table table-lg">
+                                <thead>
+                                    <tr class="text-lg">
+                                        <th class="font-gaming">Pos</th>
+                                        <th class="font-gaming">Equipo</th>
+                                        <th class="font-gaming text-center">Puntos</th>
+                                        <th class="font-gaming text-center">Flags</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rankingsTable">
+                                    {% for team in teams %}
+                                    {% with solved_count=team.submissions.filter|dictsort:"is_correct"|length %}
+                                    <tr class="hover fade-in">
+                                        <td>
+                                            <div class="flex items-center gap-3">
+                                                <div class="font-gaming text-xl {% if forloop.counter <= 3 %}text-warning{% endif %}">#{{ forloop.counter }}</div>
+                                                {% if forloop.counter == 1 %}<div class="text-2xl">🏆</div>{% endif %}
+                                                {% if forloop.counter == 2 %}<div class="text-2xl">🥈</div>{% endif %}
+                                                {% if forloop.counter == 3 %}<div class="text-2xl">🥉</div>{% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="font-gaming font-bold text-lg" style="color: {{ team.color }}">{{ team.name }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="font-mono font-bold text-xl text-success">{{ team.total_score }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="badge badge-info badge-sm font-mono">{{ team.members.count }} miembro{{ team.members.count|pluralize }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="flex gap-1">
+                                                {% with fb_count=team.first_bloods.count %}
+                                                    {% if fb_count > 0 %}
+                                                        {% for i in "x"|rjust:fb_count %}🩸{% endfor %}
+                                                    {% else %}
+                                                        -
+                                                    {% endif %}
+                                                {% endwith %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endwith %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                <!-- Stats -->
+                <div class="stats stats-vertical shadow border border-base-content/10 w-full">
+                    <div class="stat">
+                        <div class="stat-title text-xs">Total Equipos</div>
+                        <div class="stat-value text-3xl font-gaming text-success" id="totalTeams">{{ teams|length }}</div>
+                    </div>
+                    
+                    <div class="stat">
+                        <div class="stat-title text-xs">Flags Capturadas</div>
+                        <div class="stat-value text-3xl font-gaming text-warning" id="totalFlags">{{ recent_submissions|length }}</div>
+                    </div>
+                    
+                    <div class="stat">
+                        <div class="stat-title text-xs">First Bloods</div>
+                        <div class="stat-value text-3xl font-gaming text-error" id="totalFirstBloods">{{ first_bloods|length }}</div>
+                    </div>
+                </div>
+
+                <!-- First Bloods -->
+                <div class="card bg-base-300 border border-base-content/10">
+                    <div class="card-body p-4">
+                        <h3 class="text-xl font-gaming font-bold mb-3">🩸 First Bloods</h3>
+                        <div id="firstBloodsContainer" class="space-y-2 max-h-64 overflow-y-auto">
+                            {% for fb in first_bloods|slice:":5" %}
+                            <div class="p-2 bg-base-200 rounded-lg border border-error/20">
+                                <div class="font-gaming font-semibold text-sm">{{ fb.challenge.title }}</div>
+                                <div class="text-xs opacity-60 mt-1">
+                                    <span style="color: {{ fb.team.color }}">{{ fb.team.name }}</span>
+                                    <span class="badge badge-error badge-xs ml-2">+{{ fb.bonus_points }}</span>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="text-sm opacity-60">Sin first bloods aún</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card bg-base-300 border border-base-content/10">
+                    <div class="card-body p-4">
+                        <h3 class="text-xl font-gaming font-bold mb-3">⚡ Actividad Reciente</h3>
+                        <div id="recentActivityContainer" class="space-y-2 max-h-64 overflow-y-auto">
+                            {% for sub in recent_submissions|slice:":5" %}
+                            <div class="p-2 bg-base-200 rounded-lg text-xs">
+                                <div class="font-gaming font-semibold" style="color: {{ sub.team.color }}">
+                                    {{ sub.team.name }}
+                                </div>
+                                <div class="text-xs opacity-80">
+                                    {% if sub.submitted_by %}⚔️ {{ sub.submitted_by.username }}{% endif %}
+                                </div>
+                                <div class="opacity-60 mt-1">
+                                    {{ sub.challenge.title }} • {{ sub.submitted_at|timesince }} ago
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="text-sm opacity-60">Sin actividad reciente</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auto-refresh Script -->
+    <script>
+        let scoreChart = null;
+        let currentRankings = {};
+        
+        // Audio Context para sonidos
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        
+        // Función para reproducir sonido
+        function playSound(type) {
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            switch(type) {
+                case 'flag_solved':
+                    oscillator.frequency.value = 800;
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.5);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.5);
+                    break;
+                case 'first_blood':
+                    oscillator.frequency.value = 1200;
+                    gainNode.gain.setValueAtTime(0.5, audioContext.currentTime);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.8);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.8);
+                    // Segundo tono
+                    setTimeout(() => {
+                        const osc2 = audioContext.createOscillator();
+                        const gain2 = audioContext.createGain();
+                        osc2.connect(gain2);
+                        gain2.connect(audioContext.destination);
+                        osc2.frequency.value = 1500;
+                        gain2.gain.setValueAtTime(0.4, audioContext.currentTime);
+                        gain2.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.6);
+                        osc2.start(audioContext.currentTime);
+                        osc2.stop(audioContext.currentTime + 0.6);
+                    }, 100);
+                    break;
+                case 'rank_up':
+                    oscillator.frequency.value = 600;
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(1200, audioContext.currentTime + 0.3);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                    break;
+                case 'rank_down':
+                    oscillator.frequency.value = 800;
+                    gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+                    oscillator.frequency.exponentialRampToValueAtTime(400, audioContext.currentTime + 0.3);
+                    gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.3);
+                    oscillator.start(audioContext.currentTime);
+                    oscillator.stop(audioContext.currentTime + 0.3);
+                    break;
+            }
+        }
+        
+        // Cola de notificaciones
+        let notificationQueue = [];
+        let isShowingNotification = false;
+        
+        // Función para agregar notificación a la cola
+        function queueNotification(message, color, icon) {
+            notificationQueue.push({ message, color, icon });
+            processNotificationQueue();
+        }
+        
+        // Procesar cola de notificaciones
+        function processNotificationQueue() {
+            if (isShowingNotification || notificationQueue.length === 0) {
+                return;
+            }
+            
+            isShowingNotification = true;
+            const { message, color, icon } = notificationQueue.shift();
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'notification-overlay';
+            overlay.style.borderColor = color;
+            overlay.innerHTML = `
+                <div class="text-6xl mb-4">${icon}</div>
+                <div class="text-3xl font-gaming font-bold" style="color: ${color}">${message}</div>
+            `;
+            document.body.appendChild(overlay);
+            
+            setTimeout(() => {
+                overlay.remove();
+                isShowingNotification = false;
+                processNotificationQueue();
+            }, 4000);
+        }
+        
+        // WebSocket para actualizaciones en tiempo real
+        const ws = new WebSocket('ws://' + window.location.host + '/ws/scoreboard/');
+        
+        ws.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            
+            if (data.type === 'flag_solved') {
+                playSound('flag_solved');
+                queueNotification(
+                    `${data.team} resolvió ${data.challenge}!`,
+                    data.color,
+                    '🎯'
+                );
+                setTimeout(() => fetchDisplayData(), 1000);
+            } 
+            else if (data.type === 'first_blood') {
+                playSound('first_blood');
+                queueNotification(
+                    `${data.team} consiguió FIRST BLOOD en ${data.challenge}!`,
+                    data.color,
+                    '🩸'
+                );
+                setTimeout(() => fetchDisplayData(), 1000);
+            }
+            else if (data.type === 'rank_change') {
+                const isRankUp = data.new_rank < data.old_rank;
+                playSound(isRankUp ? 'rank_up' : 'rank_down');
+                queueNotification(
+                    `${data.team} ${isRankUp ? 'subió' : 'bajó'} al puesto #${data.new_rank}!`,
+                    data.color,
+                    isRankUp ? '📈' : '📉'
+                );
+                setTimeout(() => fetchDisplayData(), 500);
+            }
+        };
+
+        // Función para actualizar datos via AJAX
+        async function fetchDisplayData() {
+            try {
+                const response = await fetch('/api/display/');
+                const data = await response.json();
+                
+                // Actualizar rankings
+                updateRankings(data.teams);
+                
+                // Actualizar first bloods
+                updateFirstBloods(data.first_bloods);
+                
+                // Actualizar actividad reciente
+                updateRecentActivity(data.recent_submissions);
+                
+                // Actualizar gráfico de timeline
+                updateTimelineChart(data.timeline);
+                
+                updateTimestamp();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+        
+        function updateRankings(teams) {
+            const tbody = document.getElementById('rankingsTable');
+            
+            // Detectar cambios de ranking
+            teams.forEach((team, idx) => {
+                const oldRank = currentRankings[team.name];
+                const newRank = idx + 1;
+                
+                if (oldRank && oldRank !== newRank) {
+                    // El equipo cambió de posición
+                    const rankAnimation = newRank < oldRank ? 'rank-up' : 'rank-down';
+                    setTimeout(() => {
+                        const row = tbody.querySelector(`tr[data-team="${team.name}"]`);
+                        if (row) {
+                            row.classList.add(rankAnimation);
+                            setTimeout(() => row.classList.remove(rankAnimation), 800);
+                        }
+                    }, 100);
+                }
+                
+                currentRankings[team.name] = newRank;
+            });
+            
+            tbody.innerHTML = teams.map((team, idx) => {
+                const hasScoreChange = team.score > (team.lastScore || 0);
+                team.lastScore = team.score;
+                
+                return `
+                <tr class="hover fade-in ${hasScoreChange ? 'pulse-glow' : ''}" data-team="${team.name}">
+                    <td>
+                        <div class="flex items-center gap-3">
+                            <div class="font-gaming text-xl ${idx < 3 ? 'text-warning' : ''}">#${team.rank}</div>
+                            ${idx === 0 ? '<div class="text-2xl">🏆</div>' : ''}
+                            ${idx === 1 ? '<div class="text-2xl">🥈</div>' : ''}
+                            ${idx === 2 ? '<div class="text-2xl">🥉</div>' : ''}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="font-gaming font-bold text-lg" style="color: ${team.color}">${team.name}</div>
+                    </td>
+                    <td>
+                        <div class="font-mono font-bold text-xl text-success">${team.score}</div>
+                    </td>
+                    <td>
+                        <div class="badge badge-info badge-sm font-mono">${team.solved} resueltos</div>
+                    </td>
+                    <td>
+                        <div class="flex gap-1">
+                            ${team.first_bloods > 0 ? '🩸'.repeat(team.first_bloods) : '-'}
+                        </div>
+                    </td>
+                </tr>
+            `}).join('');
+        }
+        
+        function updateFirstBloods(firstBloods) {
+            const container = document.getElementById('firstBloodsContainer');
+            container.innerHTML = firstBloods.length > 0 ? firstBloods.map((fb, idx) => `
+                <div class="p-3 bg-base-200 rounded-lg border-l-4 slide-in-right first-blood-flash" 
+                     style="border-color: ${fb.team_color}; animation-delay: ${idx * 0.1}s">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="font-gaming font-semibold" style="color: ${fb.team_color}">${fb.team_name}</div>
+                            <div class="text-xs opacity-80">⚔️ ${fb.user_name}</div>
+                            <div class="text-sm opacity-60 mt-1">${fb.challenge} • ${fb.time}</div>
+                        </div>
+                        <div class="text-2xl">🩸</div>
+                    </div>
+                </div>
+            `).join('') : '<div class="text-sm opacity-60 text-center py-4">Sin first bloods aún</div>';
+        }
+        
+        function updateRecentActivity(submissions) {
+            const container = document.getElementById('recentActivityContainer');
+            container.innerHTML = submissions.length > 0 ? submissions.map((sub, idx) => `
+                <div class="p-3 bg-base-200 rounded-lg slide-in-right" 
+                     style="animation-delay: ${idx * 0.08}s">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="font-gaming font-semibold" style="color: ${sub.team_color}">${sub.team_name}</div>
+                            <div class="text-xs opacity-80">⚔️ ${sub.user_name}</div>
+                            <div class="text-sm opacity-60 mt-1">${sub.challenge} (+${sub.points} pts)</div>
+                        </div>
+                        <div class="text-xs opacity-40">${sub.time}</div>
+                    </div>
+                </div>
+            `).join('') : '<div class="text-sm opacity-60">Sin actividad reciente</div>';
+        }
+
+        // Función para crear/actualizar el gráfico de timeline
+        function updateTimelineChart(timelineData) {
+            const ctx = document.getElementById('scoreTimelineChart');
+            
+            // Preparar datasets para cada equipo
+            const datasets = Object.entries(timelineData).map(([teamName, teamData]) => ({
+                label: teamName,
+                data: teamData.data.map(point => ({ x: point.time, y: point.score })),
+                borderColor: teamData.color,
+                backgroundColor: teamData.color + '33',
+                borderWidth: 3,
+                tension: 0.4,
+                fill: false,
+                pointRadius: 5,
+                pointHoverRadius: 8,
+            }));
+            
+            // Si el gráfico ya existe, actualizarlo
+            if (scoreChart) {
+                scoreChart.data.datasets = datasets;
+                scoreChart.update('none');
+            } else {
+                // Crear nuevo gráfico
+                scoreChart = new Chart(ctx, {
+                    type: 'line',
+                    data: { datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                type: 'category',
+                                title: {
+                                    display: true,
+                                    text: 'Hora',
+                                    color: '#a6adba',
+                                    font: { size: 14, family: 'Rajdhani' }
+                                },
+                                ticks: { 
+                                    color: '#a6adba', 
+                                    font: { family: 'Space Mono', size: 10 },
+                                    maxRotation: 45,
+                                    minRotation: 45,
+                                    autoSkip: true,
+                                    maxTicksLimit: 20
+                                },
+                                grid: { color: '#2a2e37' }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Puntos',
+                                    color: '#a6adba',
+                                    font: { size: 14, family: 'Rajdhani' }
+                                },
+                                ticks: { color: '#a6adba', font: { family: 'Space Mono' } },
+                                grid: { color: '#2a2e37' }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: {
+                                    color: '#a6adba',
+                                    font: { size: 14, family: 'Rajdhani', weight: 'bold' },
+                                    padding: 15,
+                                    usePointStyle: true,
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: '#1d232a',
+                                titleColor: '#00ff41',
+                                bodyColor: '#a6adba',
+                                borderColor: '#00ff41',
+                                borderWidth: 1,
+                                titleFont: { family: 'Rajdhani', size: 14, weight: 'bold' },
+                                bodyFont: { family: 'Space Mono', size: 12 },
+                                padding: 12,
+                            }
+                        },
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    }
+                });
+            }
+        }
+
+        // Actualizar timestamp
+        function updateTimestamp() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('es-ES');
+            document.getElementById('lastUpdate').textContent = `Última actualización: ${timeString}`;
+        }
+        
+        // Cargar datos iniciales
+        fetchDisplayData();
+        
+        // Actualizar cada 5 segundos via AJAX
+        setInterval(fetchDisplayData, 5000);
+        
+        // Actualizar timestamp cada segundo
+        updateTimestamp();
+        setInterval(updateTimestamp, 1000);
+    </script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+{% extends 'base.html' %}
+
+{% block title %}Únete a un Equipo - Arena CTF{% endblock %}
+
+{% block content %}
+<div class="hero min-h-[80vh] bg-base-200">
+    <div class="hero-content text-center">
+        <div class="max-w-2xl">
+            <div class="text-6xl mb-6">🎯</div>
+            <h1 class="text-5xl font-gaming font-bold text-warning mb-4">
+                ¡Necesitas un Equipo!
+            </h1>
+            <p class="text-lg opacity-80 mb-8">
+                Para participar en los desafíos debes pertenecer a un equipo. 
+                Puedes crear uno nuevo o unirte a uno existente.
+            </p>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                <!-- Crear Equipo -->
+                <div class="card bg-base-300 border-2 border-success hover:border-success/80 transition-all">
+                    <div class="card-body">
+                        <div class="text-4xl mb-3">✨</div>
+                        <h2 class="card-title font-gaming text-2xl justify-center mb-2">Crear Equipo</h2>
+                        <p class="text-sm opacity-70 mb-4">
+                            Crea tu propio equipo y lidera a tus compañeros hacia la victoria
+                        </p>
+                        <a href="{% url 'teams:register' %}" class="btn btn-success btn-lg font-gaming w-full">
+                            Crear Nuevo Equipo
+                        </a>
+                    </div>
+                </div>
+                
+                <!-- Unirse a Equipo -->
+                <div class="card bg-base-300 border-2 border-info hover:border-info/80 transition-all">
+                    <div class="card-body">
+                        <div class="text-4xl mb-3">👥</div>
+                        <h2 class="card-title font-gaming text-2xl justify-center mb-2">Unirse a Equipo</h2>
+                        <p class="text-sm opacity-70 mb-4">
+                            Únete a un equipo existente y colabora con otros jugadores
+                        </p>
+                        <a href="{% url 'teams:list' %}" class="btn btn-info btn-lg font-gaming w-full">
+                            Ver Equipos
+                        </a>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Equipos Disponibles -->
+            {% if teams %}
+            <div class="divider text-sm opacity-60">Equipos Disponibles</div>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 max-w-3xl mx-auto">
+                {% for team in teams|slice:":6" %}
+                <div class="stats shadow border" style="border-color: {{ team.color }}">
+                    <div class="stat py-3">
+                        <div class="stat-title text-xs" style="color: {{ team.color }}">{{ team.name }}</div>
+                        <div class="stat-value text-2xl font-gaming">{{ team.score }}</div>
+                        <div class="stat-desc text-xs">
+                            {{ team.members.count }} miembro{{ team.members.count|pluralize }}
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+            
+            <div class="mt-8 text-sm opacity-60">
+                <p>¿Tienes dudas? Contacta a un administrador para más información.</p>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

@@ -1,0 +1,88 @@
+{% extends 'base.html' %}
+
+{% block title %}Teams - {{ ctf_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-gaming font-bold text-success mb-2">
+            Equipos
+        </h1>
+        <p class="text-sm opacity-60 mb-4">Todos los equipos registrados</p>
+        
+        {% if not user.teams.exists %}
+        <div class="flex gap-3 justify-center mt-6">
+            <a href="{% url 'teams:register' %}" class="btn btn-success">
+                ➕ Crear Equipo
+            </a>
+            <a href="{% url 'teams:join' %}" class="btn btn-primary">
+                🔐 Unirse con Código
+            </a>
+        </div>
+        {% else %}
+        <div class="alert alert-info inline-flex mt-4">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span>Ya perteneces a un equipo: <strong>{{ user.teams.first.name }}</strong></span>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Teams Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {% for team in teams %}
+        <a href="{% url 'teams:detail' team.id %}" 
+           class="card bg-base-300 border border-base-content/10 hover:border-success transition-all cursor-pointer" 
+           style="border-color: {{ team.color }}">
+            <div class="card-body p-4">
+                <!-- Team Name with Color -->
+                <h2 class="text-xl font-gaming font-semibold mb-3" style="color: {{ team.color }}">
+                    {{ team.name }}
+                </h2>
+                
+                <!-- Score Display -->
+                <div class="text-center my-3">
+                    <div class="text-3xl font-gaming text-success">
+                        {{ team.total_score }}
+                    </div>
+                    <div class="text-xs opacity-60">puntos</div>
+                </div>
+                
+                <!-- Team Stats -->
+                <div class="space-y-1 text-xs opacity-70">
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-users"></i>
+                        <span>{{ team.members.count }} miembros</span>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <i class="fas fa-calendar"></i>
+                        <span>{{ team.created_at|date:"d M Y" }}</span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        {% empty %}
+        <!-- Empty State -->
+        <div class="col-span-full">
+            <div class="alert shadow-lg">
+                <div class="flex items-center justify-center w-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="text-xl font-cyber">No hay equipos registrados aún...</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Register New Team Button -->
+    <div class="text-center mt-8">
+        <a href="{% url 'teams:register' %}" 
+           class="btn btn-success font-gaming">
+            <i class="fas fa-plus-circle"></i>
+            Registrar Nuevo Equipo
+        </a>
+    </div>
+</div>
+{% endblock %}

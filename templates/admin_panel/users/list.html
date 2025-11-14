@@ -1,0 +1,212 @@
+{% extends "admin_panel/base.html" %}
+
+{% block title %}Usuarios - Panel Admin{% endblock %}
+
+{% block admin_content %}
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-3xl font-bold text-primary">Usuarios Registrados</h1>
+        <p class="text-base-content/70 mt-1">Gestiona los usuarios de la plataforma</p>
+    </div>
+    <div class="stats shadow bg-base-200">
+        <div class="stat py-2 px-4">
+            <div class="stat-title text-xs">Total Usuarios</div>
+            <div class="stat-value text-2xl text-primary">{{ users.count }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="card bg-gradient-to-br from-primary to-primary/80 text-primary-content shadow-xl">
+        <div class="card-body py-4">
+            <h3 class="text-xs opacity-90">Total Usuarios</h3>
+            <p class="text-3xl font-bold">{{ users.count }}</p>
+        </div>
+    </div>
+
+    <div class="card bg-gradient-to-br from-success to-success/80 text-success-content shadow-xl">
+        <div class="card-body py-4">
+            <h3 class="text-xs opacity-90">Administradores</h3>
+            <p class="text-3xl font-bold">{{ admin_count }}</p>
+        </div>
+    </div>
+
+    <div class="card bg-gradient-to-br from-info to-info/80 text-info-content shadow-xl">
+        <div class="card-body py-4">
+            <h3 class="text-xs opacity-90">En Equipos</h3>
+            <p class="text-3xl font-bold">{{ users_in_teams }}</p>
+        </div>
+    </div>
+
+    <div class="card bg-gradient-to-br from-warning to-warning/80 text-warning-content shadow-xl">
+        <div class="card-body py-4">
+            <h3 class="text-xs opacity-90">Sin Equipo</h3>
+            <p class="text-3xl font-bold">{{ users_without_team }}</p>
+        </div>
+    </div>
+</div>
+
+{% if users %}
+<div class="card bg-base-200 shadow-xl">
+    <div class="card-body">
+        <div class="overflow-x-auto">
+            <table class="table table-zebra">
+                <thead>
+                    <tr>
+                        <th>Usuario</th>
+                        <th>Email</th>
+                        <th>Equipo</th>
+                        <th>Rol</th>
+                        <th>Puntos</th>
+                        <th>Solves</th>
+                        <th>Registro</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for user in users %}
+                    <tr class="hover cursor-pointer" onclick="window.location.href='{% url 'admin_panel:user_detail' user.id %}'">
+                        <td>
+                            <div class="flex items-center gap-3">
+                                <div class="avatar placeholder">
+                                    <div class="bg-primary text-primary-content rounded-full w-10">
+                                        <span class="text-sm">{{ user.username|first|upper }}</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="font-bold">{{ user.username }}</div>
+                                    {% if not user.is_active %}
+                                    <span class="badge badge-error badge-xs">Inactivo</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </td>
+                        <td class="text-sm">{{ user.email }}</td>
+                        <td onclick="event.stopPropagation()">
+                            {% if user.teams.exists %}
+                            <a href="{% url 'admin_panel:team_detail' user.teams.first.id %}" 
+                               class="link link-primary">
+                                {{ user.teams.first.name }}
+                            </a>
+                            {% else %}
+                            <span class="text-base-content/50 italic">Sin equipo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if user.is_superuser %}
+                            <span class="badge badge-error">Superadmin</span>
+                            {% elif user.is_staff %}
+                            <span class="badge badge-warning">Staff</span>
+                            {% else %}
+                            <span class="badge badge-ghost">Usuario</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <span class="font-bold text-success">
+                                {{ user.get_total_points }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge badge-info">
+                                {{ user.get_solved_count }}
+                            </span>
+                        </td>
+                        <td class="text-xs text-base-content/70">
+                            {{ user.date_joined|date:"d/m/Y" }}
+                        </td>
+                        <td onclick="event.stopPropagation()">
+                            <div class="flex gap-2">
+                                <a href="{% url 'admin_panel:user_detail' user.id %}" 
+                                   class="btn btn-sm btn-info btn-outline">
+                                    👁️
+                                </a>
+                                <a href="{% url 'admin_panel:user_edit' user.id %}" 
+                                   class="btn btn-sm btn-warning btn-outline">
+                                    ✏️
+                                </a>
+                                <a href="{% url 'admin_panel:user_ban' user.id %}" 
+                                   class="btn btn-sm {% if user.is_active %}btn-error{% else %}btn-success{% endif %} btn-outline">
+                                    {% if user.is_active %}🚫{% else %}✅{% endif %}
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="card bg-base-300 shadow-xl">
+        <div class="card-body">
+            <h3 class="card-title">🏆 Top 5 Usuarios por Puntos</h3>
+            <div class="space-y-2 mt-4">
+                {% for user in top_users %}
+                <div class="flex items-center justify-between p-3 bg-base-200 rounded-lg">
+                    <div class="flex items-center gap-3">
+                        <span class="text-lg">
+                            {% if forloop.counter == 1 %}🥇
+                            {% elif forloop.counter == 2 %}🥈
+                            {% elif forloop.counter == 3 %}🥉
+                            {% else %}{{ forloop.counter }}.
+                            {% endif %}
+                        </span>
+                        <div class="avatar placeholder">
+                            <div class="bg-primary text-primary-content rounded-full w-8">
+                                <span class="text-xs">{{ user.username|first|upper }}</span>
+                            </div>
+                        </div>
+                        <div>
+                            <p class="font-semibold">{{ user.username }}</p>
+                            {% if user.teams.exists %}
+                            <p class="text-xs text-base-content/70">{{ user.teams.first.name }}</p>
+                            {% endif %}
+                        </div>
+                    </div>
+                    <span class="badge badge-success badge-lg">{{ user.get_total_points }} pts</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="card bg-base-300 shadow-xl">
+        <div class="card-body">
+            <h3 class="card-title">📊 Estadísticas</h3>
+            <div class="stats stats-vertical shadow bg-base-200 mt-4">
+                <div class="stat py-3">
+                    <div class="stat-title text-xs">Usuarios Activos</div>
+                    <div class="stat-value text-2xl text-success">{{ active_users }}</div>
+                    <div class="stat-desc">{{ active_users_percentage }}% del total</div>
+                </div>
+                <div class="stat py-3">
+                    <div class="stat-title text-xs">Promedio Puntos</div>
+                    <div class="stat-value text-2xl text-info">{{ avg_points|floatformat:0 }}</div>
+                    <div class="stat-desc">Por usuario</div>
+                </div>
+                <div class="stat py-3">
+                    <div class="stat-title text-xs">Último Registro</div>
+                    <div class="stat-value text-xl">{{ latest_user.date_joined|timesince }}</div>
+                    <div class="stat-desc">{{ latest_user.username }}</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="card bg-base-200 shadow-xl">
+    <div class="card-body items-center text-center py-16">
+        <div class="text-6xl mb-4">👤</div>
+        <h2 class="card-title text-2xl">No hay usuarios registrados</h2>
+        <p class="text-base-content/70 max-w-md mt-2">
+            Esto no debería pasar, ya que al menos debes estar logueado como administrador.
+        </p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+

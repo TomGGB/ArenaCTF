@@ -1,0 +1,101 @@
+{% extends "admin_panel/base.html" %}
+
+{% block title %}Eliminar Categoría - Panel Admin{% endblock %}
+
+{% block admin_content %}
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-3xl font-bold text-error">⚠️ Eliminar Categoría</h1>
+        <p class="text-base-content/70 mt-1">Esta acción no se puede deshacer</p>
+    </div>
+    <a href="{% url 'admin_panel:categories_list' %}" class="btn btn-outline btn-sm">
+        <span>← Volver a Categorías</span>
+    </a>
+</div>
+
+<div class="card bg-base-200 shadow-xl border-2 border-error">
+    <div class="card-body">
+        <h2 class="card-title text-3xl">{{ category.name }}</h2>
+        
+        {% if category.description %}
+        <p class="text-base-content/70">{{ category.description }}</p>
+        {% endif %}
+
+        <div class="divider"></div>
+
+        {% if category.challenge_set.count > 0 %}
+        <div class="alert alert-error">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+                <h3 class="font-bold">¡No se puede eliminar esta categoría!</h3>
+                <p class="text-sm">Hay <strong>{{ category.challenge_set.count }} challenge(s)</strong> usando esta categoría.</p>
+                <p class="text-sm mt-2">Debes reasignar o eliminar esos challenges primero.</p>
+            </div>
+        </div>
+
+        <div class="mt-4">
+            <h3 class="font-semibold mb-3">Challenges afectados:</h3>
+            <div class="space-y-2 max-h-64 overflow-y-auto">
+                {% for challenge in category.challenge_set.all %}
+                <div class="flex items-center justify-between p-3 bg-base-300 rounded-lg">
+                    <div>
+                        <span class="font-semibold">{{ challenge.title }}</span>
+                        <span class="text-sm text-base-content/70 ml-2">
+                            ({{ challenge.points }} puntos)
+                        </span>
+                    </div>
+                    <a href="{% url 'admin_panel:challenge_edit' challenge.id %}" 
+                       class="btn btn-xs btn-outline btn-info">
+                        Editar
+                    </a>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+
+        <div class="card-actions justify-end mt-6">
+            <a href="{% url 'admin_panel:categories_list' %}" class="btn btn-outline">
+                ← Volver
+            </a>
+        </div>
+
+        {% else %}
+        <div class="alert alert-warning">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+            </svg>
+            <div>
+                <h3 class="font-bold">¡Cuidado! Esta acción es permanente</h3>
+                <p class="text-sm">Esta categoría no tiene challenges asociados, pero una vez eliminada no podrás recuperarla.</p>
+            </div>
+        </div>
+
+        <form method="POST" class="mt-6">
+            {% csrf_token %}
+            <div class="card-actions justify-end gap-3">
+                <a href="{% url 'admin_panel:categories_list' %}" class="btn btn-outline">
+                    ← Cancelar
+                </a>
+                <button type="submit" class="btn btn-error">
+                    🗑️ Confirmar Eliminación
+                </button>
+            </div>
+        </form>
+        {% endif %}
+    </div>
+</div>
+
+<div class="mt-6 alert alert-info">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>
+    <span>
+        💡 <strong>Tip:</strong> Las categorías vacías se pueden eliminar de forma segura. 
+        Considera crear una categoría "Misc" o "Archive" para challenges que no encajan en otras categorías.
+    </span>
+</div>
+{% endblock %}
+
+

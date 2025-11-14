@@ -1,0 +1,79 @@
+{% extends "admin_panel/base.html" %}
+
+{% block title %}Eliminar Challenge - Panel Admin{% endblock %}
+
+{% block admin_content %}
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-3xl font-bold text-error">⚠️ Eliminar Challenge</h1>
+        <p class="text-base-content/70 mt-1">Esta acción no se puede deshacer</p>
+    </div>
+    <a href="{% url 'admin_panel:challenges_list' %}" class="btn btn-outline btn-sm">
+        <span>← Volver a Challenges</span>
+    </a>
+</div>
+
+<div class="card bg-base-200 shadow-xl border-2 border-error">
+    <div class="card-body">
+        <h2 class="card-title text-2xl">{{ challenge.title }}</h2>
+        
+        <div class="space-y-4 mt-4">
+            <div class="flex items-center gap-3">
+                <span class="badge badge-lg badge-primary">{{ challenge.category.name }}</span>
+                <span class="text-lg font-semibold">{{ challenge.points }} puntos</span>
+            </div>
+
+            <div class="alert alert-warning">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div>
+                    <h3 class="font-bold">¡Cuidado! Esta acción es permanente</h3>
+                    <p class="text-sm">Se eliminarán también:</p>
+                    <ul class="list-disc list-inside text-sm mt-2">
+                        <li>{{ submission_count }} submission(s) asociadas</li>
+                        <li>{% if has_first_blood %}First Blood{% else %}Sin first blood{% endif %}</li>
+                        <li>Todo el historial relacionado</li>
+                    </ul>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <div class="bg-base-300 p-4 rounded-lg">
+                <h3 class="font-semibold mb-2">Descripción:</h3>
+                <p class="text-sm">{{ challenge.description|truncatewords:50 }}</p>
+            </div>
+
+            <div class="bg-base-300 p-4 rounded-lg">
+                <h3 class="font-semibold mb-2">Flag:</h3>
+                <code class="text-sm">{{ challenge.flag }}</code>
+            </div>
+        </div>
+
+        <form method="POST" class="mt-6">
+            {% csrf_token %}
+            <div class="card-actions justify-end gap-3">
+                <a href="{% url 'admin_panel:challenges_list' %}" class="btn btn-outline">
+                    ← Cancelar
+                </a>
+                <button type="submit" class="btn btn-error">
+                    🗑️ Confirmar Eliminación
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="mt-6 alert alert-info">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>
+    <span>
+        💡 <strong>Tip:</strong> Si solo quieres ocultar el challenge temporalmente, 
+        considera desactivarlo en lugar de eliminarlo.
+    </span>
+</div>
+{% endblock %}
+
+

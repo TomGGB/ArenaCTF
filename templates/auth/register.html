@@ -1,0 +1,130 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Registro - Arena CTF</title>
+    
+    <!-- Tailwind CSS + DaisyUI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'gaming': ['Rajdhani', 'sans-serif'],
+                        'mono': ['Space Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Rajdhani', sans-serif;
+        }
+    </style>
+</head>
+<body data-theme="dark" class="bg-base-100">
+    <div class="hero min-h-screen">
+        <div class="hero-content flex-col lg:flex-row-reverse gap-12">
+            <!-- Branding Side -->
+            <div class="text-center lg:text-left max-w-md">
+                <h1 class="text-6xl font-gaming font-bold text-success mb-4">
+                    Arena CTF
+                </h1>
+                <p class="text-xl opacity-70 mb-6">
+                    Únete a la competencia de ciberseguridad
+                </p>
+                <div class="space-y-2 text-sm opacity-60">
+                    <p>✨ Crea tu cuenta gratis</p>
+                    <p>🎯 Participa en desafíos</p>
+                    <p>🏆 Compite en rankings</p>
+                    <p>👥 Forma equipos</p>
+                </div>
+            </div>
+
+            <!-- Register Form -->
+            <div class="card bg-base-300 w-full max-w-md shadow-2xl border border-base-content/10">
+                <div class="card-body">
+                    <h2 class="text-3xl font-gaming font-bold text-center mb-2">Crear Cuenta</h2>
+                    <p class="text-center text-sm opacity-60 mb-4">Completa el formulario para registrarte</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if messages %}
+                            {% for message in messages %}
+                            <div class="alert alert-error mb-4">
+                                <span class="text-sm">{{ message }}</span>
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-gaming">Nombre de Usuario</span>
+                            </label>
+                            <input type="text" name="username" placeholder="Ej: hacker123" required 
+                                   class="input input-bordered input-success w-full" autofocus
+                                   minlength="3" maxlength="30">
+                            <label class="label">
+                                <span class="label-text-alt text-xs opacity-60">Mínimo 3 caracteres</span>
+                            </label>
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-gaming">Correo Electrónico</span>
+                            </label>
+                            <input type="email" name="email" placeholder="tu@email.com" required 
+                                   class="input input-bordered input-success w-full">
+                        </div>
+                        
+                        <div class="form-control mt-3">
+                            <label class="label">
+                                <span class="label-text font-gaming">Contraseña</span>
+                            </label>
+                            <input type="password" name="password" placeholder="••••••••" required 
+                                   class="input input-bordered input-success w-full"
+                                   minlength="6">
+                            <label class="label">
+                                <span class="label-text-alt text-xs opacity-60">Mínimo 6 caracteres</span>
+                            </label>
+                        </div>
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-gaming">Confirmar Contraseña</span>
+                            </label>
+                            <input type="password" name="password_confirm" placeholder="••••••••" required 
+                                   class="input input-bordered input-success w-full"
+                                   minlength="6">
+                        </div>
+                        
+                        <div class="form-control mt-6">
+                            <button type="submit" class="btn btn-success w-full font-gaming text-lg">
+                                Crear Cuenta
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="divider text-xs opacity-60">Ya tienes cuenta?</div>
+                    
+                    <div class="text-center">
+                        <a href="/login/" class="btn btn-ghost btn-sm font-gaming">
+                            Iniciar Sesión
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

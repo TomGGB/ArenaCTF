@@ -1,0 +1,165 @@
+{% extends "admin_panel/base.html" %}
+
+{% block title %}Equipos - Panel Admin{% endblock %}
+
+{% block admin_content %}
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-3xl font-bold text-primary">Equipos Registrados</h1>
+        <p class="text-base-content/70 mt-1">Gestiona los equipos participantes del CTF</p>
+    </div>
+    <div class="flex items-center gap-4">
+        <div class="stats shadow bg-base-200">
+            <div class="stat py-2 px-4">
+                <div class="stat-title text-xs">Total Equipos</div>
+                <div class="stat-value text-2xl text-primary">{{ teams.count }}</div>
+            </div>
+        </div>
+        <a href="{% url 'admin_panel:team_create' %}" class="btn btn-success">
+            ➕ Crear Equipo
+        </a>
+    </div>
+</div>
+
+{% if teams %}
+<div class="card bg-base-200 shadow-xl">
+    <div class="card-body">
+        <div class="overflow-x-auto">
+            <table class="table table-zebra">
+                <thead>
+                    <tr>
+                        <th>Equipo</th>
+                        <th>Integrantes</th>
+                        <th>Puntaje</th>
+                        <th>Solves</th>
+                        <th>First Bloods</th>
+                        <th>Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for team in teams %}
+                    <tr class="hover cursor-pointer" onclick="window.location.href='{% url 'admin_panel:team_detail' team.id %}'">
+                        <td>
+                            <div class="flex items-center gap-3">
+                                <div class="avatar placeholder">
+                                    <div class="bg-primary text-primary-content rounded-full w-10">
+                                        <span class="text-lg">{{ team.name|first|upper }}</span>
+                                    </div>
+                                </div>
+                                <div>
+                                    <div class="font-bold">{{ team.name }}</div>
+                                    <div class="text-sm opacity-50">Creado {{ team.created_at|date:"d/m/Y" }}</div>
+                                </div>
+                            </div>
+                        </td>
+                        <td>
+                            <div class="flex items-center gap-2">
+                                <span class="badge badge-ghost">
+                                    👥 {{ team.members.count }} miembro{{ team.members.count|pluralize }}
+                                </span>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="font-bold text-success text-lg">
+                                {{ team.score }} pts
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge badge-info">
+                                ✓ {{ team.get_solved_challenges_count }}
+                            </span>
+                        </td>
+                        <td>
+                            <span class="badge badge-error">
+                                🩸 {{ team.get_first_bloods_count }}
+                            </span>
+                        </td>
+                        <td onclick="event.stopPropagation()">
+                            <div class="flex gap-2">
+                                <a href="{% url 'admin_panel:team_detail' team.id %}" 
+                                   class="btn btn-sm btn-info btn-outline">
+                                    👁️
+                                </a>
+                                <a href="{% url 'admin_panel:team_edit' team.id %}" 
+                                   class="btn btn-sm btn-warning btn-outline">
+                                    ✏️
+                                </a>
+                                <a href="{% url 'admin_panel:team_delete' team.id %}" 
+                                   class="btn btn-sm btn-error btn-outline">
+                                    🗑️
+                                </a>
+                            </div>
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="mt-6 grid grid-cols-1 md:grid-cols-3 gap-4">
+    <div class="card bg-base-300 shadow-xl">
+        <div class="card-body">
+            <h3 class="card-title text-lg">📊 Top 3 Equipos</h3>
+            <div class="space-y-2 mt-2">
+                {% for team in teams|slice:":3" %}
+                <div class="flex items-center justify-between p-2 bg-base-200 rounded">
+                    <div class="flex items-center gap-2">
+                        <span class="text-lg">{% if forloop.counter == 1 %}🥇{% elif forloop.counter == 2 %}🥈{% else %}🥉{% endif %}</span>
+                        <span class="font-semibold">{{ team.name }}</span>
+                    </div>
+                    <span class="badge badge-success">{{ team.score }}</span>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="card bg-base-300 shadow-xl">
+        <div class="card-body">
+            <h3 class="card-title text-lg">👥 Total Participantes</h3>
+            <div class="stat-value text-4xl text-primary text-center mt-4">
+                {{ total_members }}
+            </div>
+            <p class="text-center text-sm text-base-content/70">
+                usuarios registrados en equipos
+            </p>
+        </div>
+    </div>
+
+    <div class="card bg-base-300 shadow-xl">
+        <div class="card-body">
+            <h3 class="card-title text-lg">📈 Promedio</h3>
+            <div class="stat-value text-4xl text-info text-center mt-4">
+                {{ avg_members_per_team|floatformat:1 }}
+            </div>
+            <p class="text-center text-sm text-base-content/70">
+                miembros por equipo
+            </p>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="card bg-base-200 shadow-xl">
+    <div class="card-body items-center text-center py-16">
+        <div class="text-6xl mb-4">👥</div>
+        <h2 class="card-title text-2xl">No hay equipos registrados</h2>
+        <p class="text-base-content/70 max-w-md mt-2">
+            Los usuarios pueden crear equipos desde la página de registro de equipos.
+        </p>
+        <div class="mt-6 alert alert-info max-w-md">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span class="text-sm">
+                Los equipos se crean automáticamente cuando los usuarios se registran. No necesitas crearlos manualmente.
+            </span>
+        </div>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+

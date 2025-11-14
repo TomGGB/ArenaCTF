@@ -1,0 +1,130 @@
+{% extends "admin_panel/base.html" %}
+
+{% block title %}Editar Challenge - Panel Admin{% endblock %}
+
+{% block admin_content %}
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-3xl font-bold text-primary">Editar Challenge</h1>
+        <p class="text-base-content/70 mt-1">Modificar detalles del challenge</p>
+    </div>
+    <a href="{% url 'admin_panel:challenges_list' %}" class="btn btn-outline btn-sm">
+        <span>← Volver a Challenges</span>
+    </a>
+</div>
+
+<div class="card bg-base-200 shadow-xl">
+    <div class="card-body">
+        <form method="POST" class="space-y-4">
+            {% csrf_token %}
+            
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text font-semibold">Título del Challenge</span>
+                </label>
+                <input type="text" name="title" value="{{ challenge.title }}" 
+                       class="input input-bordered w-full" required>
+            </div>
+
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text font-semibold">Categoría</span>
+                </label>
+                <select name="category" class="select select-bordered w-full" required>
+                    <option value="" disabled>Selecciona una categoría</option>
+                    {% for cat in categories %}
+                    <option value="{{ cat.id }}" {% if cat.id == challenge.category.id %}selected{% endif %}>
+                        {{ cat.name }}
+                    </option>
+                    {% endfor %}
+                </select>
+                <label class="label">
+                    <span class="label-text-alt">
+                        <a href="{% url 'admin_panel:category_create' %}" class="link link-primary">
+                            + Crear nueva categoría
+                        </a>
+                    </span>
+                </label>
+            </div>
+
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text font-semibold">Puntos</span>
+                </label>
+                <input type="number" name="points" value="{{ challenge.points }}" 
+                       min="1" class="input input-bordered w-full" required>
+            </div>
+
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text font-semibold">Flag (Respuesta)</span>
+                </label>
+                <input type="text" name="flag" value="{{ challenge.flag }}" 
+                       class="input input-bordered w-full font-mono" required>
+            </div>
+
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text font-semibold">Descripción</span>
+                </label>
+                <textarea name="description" rows="6" class="textarea textarea-bordered w-full" 
+                          required>{{ challenge.description }}</textarea>
+            </div>
+
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text font-semibold">Pistas (Opcional)</span>
+                </label>
+                <textarea name="hints" rows="4" class="textarea textarea-bordered w-full">{{ challenge.hints }}</textarea>
+            </div>
+
+            <div class="form-control">
+                <label class="label cursor-pointer justify-start gap-4">
+                    <input type="checkbox" name="is_active" class="toggle toggle-success" 
+                           {% if challenge.is_active %}checked{% endif %}>
+                    <span class="label-text font-semibold">Challenge Activo</span>
+                </label>
+                <label class="label">
+                    <span class="label-text-alt">Los challenges inactivos no se muestran a los participantes</span>
+                </label>
+            </div>
+
+            <div class="card-actions justify-end pt-4">
+                <a href="{% url 'admin_panel:challenges_list' %}" class="btn btn-ghost">
+                    Cancelar
+                </a>
+                <button type="submit" class="btn btn-primary">
+                    💾 Guardar Cambios
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="mt-6 card bg-base-300 shadow-xl">
+    <div class="card-body">
+        <h3 class="card-title text-warning">⚠️ Estadísticas del Challenge</h3>
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mt-4">
+            <div class="stat bg-base-200 rounded-lg">
+                <div class="stat-title">Total Solves</div>
+                <div class="stat-value text-success">{{ solve_count }}</div>
+            </div>
+            <div class="stat bg-base-200 rounded-lg">
+                <div class="stat-title">First Blood</div>
+                <div class="stat-value text-error">
+                    {% if has_first_blood %}🩸{% else %}-{% endif %}
+                </div>
+            </div>
+            <div class="stat bg-base-200 rounded-lg">
+                <div class="stat-title">Tasa de Solución</div>
+                <div class="stat-value text-info">{{ solve_rate }}%</div>
+            </div>
+        </div>
+        <p class="text-sm text-base-content/70 mt-4">
+            💡 Ten cuidado al modificar el flag o los puntos, ya que puede afectar las submissions existentes.
+        </p>
+    </div>
+</div>
+{% endblock %}
+
+

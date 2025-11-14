@@ -1,0 +1,185 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Editar Equipo - Panel Admin{% endblock %}
+
+{% block admin_content %}
+<div class="max-w-6xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-4xl font-gaming font-bold text-warning mb-2">✏️ Editar Equipo</h1>
+            <p class="opacity-60">Gestionar información y miembros de {{ team.name }}</p>
+        </div>
+        <a href="{% url 'admin_panel:team_detail' team.id %}" class="btn btn-ghost">
+            ← Volver
+        </a>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Información del Equipo -->
+        <div class="card bg-base-300 border border-base-content/10">
+            <div class="card-body">
+                <h3 class="card-title text-2xl text-primary">📋 Información Básica</h3>
+                
+                <form method="POST" class="space-y-4">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="update_info">
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">Nombre del Equipo</span>
+                        </label>
+                        <input type="text" name="name" value="{{ team.name }}" 
+                               class="input input-bordered" required>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">Color del Equipo</span>
+                        </label>
+                        <input type="color" name="color" value="{{ team.color }}" 
+                               class="input input-bordered h-12">
+                    </div>
+                    
+                    <button type="submit" class="btn btn-warning btn-block">
+                        💾 Guardar Cambios
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Miembros Actuales -->
+        <div class="card bg-base-300 border border-base-content/10">
+            <div class="card-body">
+                <h3 class="card-title text-2xl text-info">👥 Miembros ({{ team.members.count }})</h3>
+                
+                <div class="space-y-2 max-h-96 overflow-y-auto">
+                    {% for member in team.members.all %}
+                    <div class="flex items-center justify-between p-3 bg-base-200 rounded-lg">
+                        <div class="flex items-center gap-3">
+                            <div class="avatar placeholder">
+                                <div class="bg-primary text-primary-content rounded-full w-10">
+                                    <span class="text-sm">{{ member.username|first|upper }}</span>
+                                </div>
+                            </div>
+                            <div>
+                                <p class="font-semibold">{{ member.username }}</p>
+                                <p class="text-xs text-base-content/70">{{ member.email }}</p>
+                            </div>
+                        </div>
+                        
+                        <form method="POST" class="inline">
+                            {% csrf_token %}
+                            <input type="hidden" name="action" value="remove_member">
+                            <input type="hidden" name="user_id" value="{{ member.id }}">
+                            <button type="submit" class="btn btn-error btn-sm">
+                                ❌
+                            </button>
+                        </form>
+                    </div>
+                    {% empty %}
+                    <div class="alert alert-info">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span>No hay miembros en este equipo</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Agregar Miembro -->
+        <div class="card bg-base-300 border border-base-content/10">
+            <div class="card-body">
+                <h3 class="card-title text-2xl text-success">➕ Agregar Miembro</h3>
+                
+                <form method="POST" class="space-y-4">
+                    {% csrf_token %}
+                    <input type="hidden" name="action" value="add_member">
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">Seleccionar Usuario</span>
+                        </label>
+                        <select name="user_id" class="select select-bordered" required>
+                            <option value="">-- Seleccionar Usuario --</option>
+                            {% for user in available_users %}
+                            <option value="{{ user.id }}">
+                                {{ user.username }} ({{ user.email }})
+                            </option>
+                            {% endfor %}
+                        </select>
+                    </div>
+                    
+                    <button type="submit" class="btn btn-success btn-block">
+                        ➕ Agregar al Equipo
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Acciones Peligrosas -->
+        <div class="card bg-base-300 border-2 border-error">
+            <div class="card-body">
+                <h3 class="card-title text-2xl text-error">⚠️ Zona Peligrosa</h3>
+                
+                <div class="space-y-4">
+                    <div class="alert alert-warning">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                        </svg>
+                        <span class="text-sm">Estas acciones son irreversibles</span>
+                    </div>
+                    
+                    <form method="POST" class="space-y-3">
+                        {% csrf_token %}
+                        <input type="hidden" name="action" value="reset_score">
+                        <button type="submit" class="btn btn-warning btn-block" 
+                                onclick="return confirm('¿Seguro que deseas resetear el puntaje del equipo?')">
+                            🔄 Resetear Puntaje
+                        </button>
+                    </form>
+                    
+                    <a href="{% url 'admin_panel:team_delete' team.id %}" class="btn btn-error btn-block">
+                        🗑️ Eliminar Equipo
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="card bg-base-300 border border-base-content/10">
+        <div class="card-body">
+            <h3 class="card-title text-2xl">📊 Estadísticas del Equipo</h3>
+            
+            <div class="stats stats-vertical lg:stats-horizontal shadow bg-base-200">
+                <div class="stat">
+                    <div class="stat-title">Puntaje Total</div>
+                    <div class="stat-value text-success">{{ team.total_score }}</div>
+                    <div class="stat-desc">Puntos acumulados</div>
+                </div>
+                
+                <div class="stat">
+                    <div class="stat-title">Miembros</div>
+                    <div class="stat-value text-info">{{ team.members.count }}</div>
+                    <div class="stat-desc">Total de integrantes</div>
+                </div>
+                
+                <div class="stat">
+                    <div class="stat-title">Challenges Resueltos</div>
+                    <div class="stat-value text-warning">{{ team.get_solved_challenges_count }}</div>
+                    <div class="stat-desc">Desafíos completados</div>
+                </div>
+                
+                <div class="stat">
+                    <div class="stat-title">First Bloods</div>
+                    <div class="stat-value text-error">{{ team.get_first_bloods_count }}</div>
+                    <div class="stat-desc">Primeras resoluciones</div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

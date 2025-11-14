@@ -1,0 +1,171 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Setup Completado</title>
+    
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'gaming': ['Rajdhani', 'sans-serif'],
+                        'mono': ['Space Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        @keyframes confetti {
+            0% { transform: translateY(0) rotate(0deg); opacity: 1; }
+            100% { transform: translateY(100vh) rotate(360deg); opacity: 0; }
+        }
+        .confetti {
+            position: fixed;
+            width: 10px;
+            height: 10px;
+            animation: confetti 3s ease-in infinite;
+        }
+    </style>
+</head>
+<body data-theme="dark" class="bg-base-100">
+    <div class="min-h-screen flex items-center justify-center px-4">
+        <div class="max-w-3xl w-full">
+            <!-- Success Card -->
+            <div class="card bg-base-300 border-2 border-success shadow-2xl">
+                <div class="card-body p-12 text-center">
+                    <!-- Success Icon -->
+                    <div class="mb-6">
+                        <div class="text-8xl mb-4">🎉</div>
+                        <h1 class="text-5xl font-gaming font-bold text-success mb-4">
+                            ¡Setup Completado!
+                        </h1>
+                        <p class="text-xl opacity-80">
+                            Tu plataforma CTF está lista para usar
+                        </p>
+                    </div>
+
+                    <!-- Success Message -->
+                    <div class="max-w-xl mx-auto mb-8">
+                        <div class="alert alert-success shadow-lg">
+                            <div>
+                                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current flex-shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+                                <span class="font-gaming">La configuración inicial se ha completado correctamente</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Quick Actions -->
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+                        <!-- Dashboard -->
+                        <div class="card bg-base-200 border border-success/30 hover:border-success transition-all cursor-pointer">
+                            <div class="card-body p-6">
+                                <div class="text-4xl mb-3">📊</div>
+                                <h3 class="font-gaming font-bold text-xl mb-2">Ir al Dashboard</h3>
+                                <p class="text-sm opacity-60 mb-4">
+                                    Ver el scoreboard y comenzar a usar la plataforma
+                                </p>
+                                <a href="{% url 'scoreboard:dashboard' %}" 
+                                   class="btn btn-success btn-sm font-gaming">
+                                    Ir al Dashboard →
+                                </a>
+                            </div>
+                        </div>
+
+                        <!-- Admin Panel -->
+                        <div class="card bg-base-200 border border-info/30 hover:border-info transition-all cursor-pointer">
+                            <div class="card-body p-6">
+                                <div class="text-4xl mb-3">⚙️</div>
+                                <h3 class="font-gaming font-bold text-xl mb-2">Panel de Admin</h3>
+                                <p class="text-sm opacity-60 mb-4">
+                                    Crear challenges, categorías y configurar todo
+                                </p>
+                                <a href="{% url 'admin_panel:dashboard' %}" 
+                                   class="btn btn-info btn-sm font-gaming">
+                                    Ir al Admin →
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Next Steps -->
+                    <div class="max-w-2xl mx-auto mb-8">
+                        <h3 class="font-gaming text-2xl font-bold mb-4">Próximos Pasos Recomendados:</h3>
+                        <div class="text-left space-y-3">
+                            <div class="flex items-start gap-3 p-3 bg-base-200 rounded-lg">
+                                <div class="text-2xl">1️⃣</div>
+                                <div>
+                                    <div class="font-gaming font-semibold">Crear Categorías</div>
+                                    <div class="text-sm opacity-60">Web, Crypto, Forensics, Pwn, etc.</div>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-3 bg-base-200 rounded-lg">
+                                <div class="text-2xl">2️⃣</div>
+                                <div>
+                                    <div class="font-gaming font-semibold">Agregar Challenges</div>
+                                    <div class="text-sm opacity-60">Con descripción, flag y puntos</div>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-3 bg-base-200 rounded-lg">
+                                <div class="text-2xl">3️⃣</div>
+                                <div>
+                                    <div class="font-gaming font-semibold">Crear tu Equipo</div>
+                                    <div class="text-sm opacity-60">Registra tu equipo para participar</div>
+                                </div>
+                            </div>
+                            <div class="flex items-start gap-3 p-3 bg-base-200 rounded-lg">
+                                <div class="text-2xl">4️⃣</div>
+                                <div>
+                                    <div class="font-gaming font-semibold">Configurar Fechas</div>
+                                    <div class="text-sm opacity-60">Define cuándo inicia y termina tu CTF</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Resources -->
+                    <div class="max-w-xl mx-auto mb-8">
+                        <div class="alert shadow-lg">
+                            <div>
+                                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info flex-shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                                <div class="text-sm text-left">
+                                    <span class="font-semibold">Recordatorio:</span>
+                                    <ul class="mt-2 ml-4 opacity-80">
+                                        <li>• Credenciales de admin guardadas de forma segura</li>
+                                        <li>• Los usuarios pueden registrarse y crear equipos</li>
+                                        <li>• El scoreboard se actualiza en tiempo real</li>
+                                        <li>• First Blood otorga 50 puntos bonus</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Main Action Button -->
+                    <div class="card-actions justify-center">
+                        <a href="{% url 'scoreboard:dashboard' %}" 
+                           class="btn btn-success btn-lg font-gaming text-xl px-16">
+                            Comenzar a Usar la Plataforma
+                            <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3" />
+                            </svg>
+                        </a>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Footer Note -->
+            <div class="text-center mt-6 text-sm opacity-40">
+                Este asistente no volverá a aparecer. ¡Buena suerte con tu CTF! 🚀
+            </div>
+        </div>
+    </div>
+</body>
+</html>

@@ -1,0 +1,84 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Challenges - Panel Admin{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <h1 class="text-4xl font-gaming font-bold text-success">Challenges</h1>
+        <a href="{% url 'admin_panel:challenge_create' %}" class="btn btn-success font-gaming">
+            <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+            </svg>
+            Crear Challenge
+        </a>
+    </div>
+
+    <!-- Challenges Table -->
+    <div class="card bg-base-300 border border-base-content/10">
+        <div class="card-body p-0">
+            <div class="overflow-x-auto">
+                <table class="table table-zebra">
+                    <thead>
+                        <tr class="font-gaming text-base">
+                            <th>Challenge</th>
+                            <th>Categoría</th>
+                            <th>Puntos</th>
+                            <th>Resueltos</th>
+                            <th>Estado</th>
+                            <th>Acciones</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for challenge in challenges %}
+                        <tr>
+                            <td>
+                                <div class="font-gaming font-semibold">{{ challenge.title }}</div>
+                                <div class="text-xs opacity-60">{{ challenge.flag }}</div>
+                            </td>
+                            <td>
+                                <div class="badge" style="background-color: {{ challenge.category.color }}33; border-color: {{ challenge.category.color }}">
+                                    {{ challenge.category.icon }} {{ challenge.category.name }}
+                                </div>
+                            </td>
+                            <td>
+                                <span class="badge badge-success font-mono">{{ challenge.points }} pts</span>
+                            </td>
+                            <td>
+                                <span class="font-mono">{{ challenge.solve_count }}</span>
+                            </td>
+                            <td>
+                                {% if challenge.is_active %}
+                                <span class="badge badge-success badge-sm">Activo</span>
+                                {% else %}
+                                <span class="badge badge-ghost badge-sm">Inactivo</span>
+                                {% endif %}
+                            </td>
+                            <td>
+                                <div class="flex gap-2">
+                                    <a href="{% url 'admin_panel:challenge_edit' challenge.id %}" class="btn btn-sm btn-info">
+                                        Editar
+                                    </a>
+                                    <a href="{% url 'admin_panel:challenge_delete' challenge.id %}" class="btn btn-sm btn-error">
+                                        Eliminar
+                                    </a>
+                                </div>
+                            </td>
+                        </tr>
+                        {% empty %}
+                        <tr>
+                            <td colspan="6" class="text-center py-8 opacity-60">
+                                No hay challenges creados. <a href="{% url 'admin_panel:challenge_create' %}" class="link link-success">Crear uno ahora</a>
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

@@ -1,0 +1,215 @@
+{% extends "admin_panel/base.html" %}
+
+{% block title %}Submissions - Panel Admin{% endblock %}
+
+{% block admin_content %}
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-3xl font-bold text-primary">Historial de Submissions</h1>
+        <p class="text-base-content/70 mt-1">Monitorea todos los intentos de resolución</p>
+    </div>
+    <div class="stats shadow bg-base-200">
+        <div class="stat py-2 px-4">
+            <div class="stat-title text-xs">Total</div>
+            <div class="stat-value text-2xl text-primary">{{ submissions.count }}</div>
+        </div>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+    <div class="card bg-gradient-to-br from-primary to-primary/80 text-primary-content shadow-xl">
+        <div class="card-body py-4">
+            <h3 class="text-xs opacity-90">Total Submissions</h3>
+            <p class="text-3xl font-bold">{{ total_submissions }}</p>
+        </div>
+    </div>
+
+    <div class="card bg-gradient-to-br from-success to-success/80 text-success-content shadow-xl">
+        <div class="card-body py-4">
+            <h3 class="text-xs opacity-90">Correctas</h3>
+            <p class="text-3xl font-bold">{{ correct_submissions }}</p>
+        </div>
+    </div>
+
+    <div class="card bg-gradient-to-br from-error to-error/80 text-error-content shadow-xl">
+        <div class="card-body py-4">
+            <h3 class="text-xs opacity-90">Incorrectas</h3>
+            <p class="text-3xl font-bold">{{ incorrect_submissions }}</p>
+        </div>
+    </div>
+
+    <div class="card bg-gradient-to-br from-info to-info/80 text-info-content shadow-xl">
+        <div class="card-body py-4">
+            <h3 class="text-xs opacity-90">Tasa de Éxito</h3>
+            <p class="text-3xl font-bold">{{ success_rate }}%</p>
+        </div>
+    </div>
+</div>
+
+{% if submissions %}
+<div class="card bg-base-200 shadow-xl">
+    <div class="card-body">
+        <div class="flex items-center justify-between mb-4">
+            <h2 class="card-title">📜 Todas las Submissions</h2>
+            <div class="flex gap-2">
+                <div class="badge badge-success">✓ {{ correct_submissions }} Correctas</div>
+                <div class="badge badge-error">✗ {{ incorrect_submissions }} Incorrectas</div>
+            </div>
+        </div>
+
+        <div class="overflow-x-auto">
+            <table class="table table-zebra table-sm">
+                <thead>
+                    <tr>
+                        <th>Fecha/Hora</th>
+                        <th>Usuario</th>
+                        <th>Equipo</th>
+                        <th>Challenge</th>
+                        <th>Categoría</th>
+                        <th>Estado</th>
+                        <th>Puntos</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for submission in submissions %}
+                    <tr class="hover">
+                        <td class="text-xs">
+                            <div>{{ submission.submitted_at|date:"d/m/Y" }}</div>
+                            <div class="text-base-content/50">{{ submission.submitted_at|date:"H:i:s" }}</div>
+                        </td>
+                        <td>
+                            <div class="flex items-center gap-2">
+                                <div class="avatar placeholder">
+                                    <div class="bg-primary text-primary-content rounded-full w-8">
+                                        <span class="text-xs">{{ submission.submitted_by.username|first|upper }}</span>
+                                    </div>
+                                </div>
+                                <a href="{% url 'admin_panel:user_detail' submission.submitted_by.id %}" 
+                                   class="link link-primary text-sm">
+                                    {{ submission.submitted_by.username }}
+                                </a>
+                            </div>
+                        </td>
+                        <td>
+                            {% if submission.team %}
+                            <a href="{% url 'admin_panel:team_detail' submission.team.id %}" 
+                               class="link link-info text-sm">
+                                {{ submission.team.name }}
+                            </a>
+                            {% else %}
+                            <span class="text-base-content/50 italic text-xs">Sin equipo</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            <div class="font-semibold text-sm">{{ submission.challenge.title }}</div>
+                        </td>
+                        <td>
+                            <span class="badge badge-primary badge-sm">
+                                {{ submission.challenge.category.name }}
+                            </span>
+                        </td>
+                        <td>
+                            {% if submission.is_correct %}
+                            <div class="flex items-center gap-2">
+                                <span class="badge badge-success badge-sm">✓ Correcto</span>
+                                {% if submission.is_first_blood %}
+                                <span class="badge badge-error badge-sm">🩸 FB</span>
+                                {% endif %}
+                            </div>
+                            {% else %}
+                            <span class="badge badge-error badge-sm">✗ Incorrecto</span>
+                            {% endif %}
+                        </td>
+                        <td>
+                            {% if submission.is_correct %}
+                            <span class="font-bold text-success text-sm">
+                                +{{ submission.challenge.points }}
+                            </span>
+                            {% else %}
+                            <span class="text-base-content/50 text-sm">0</span>
+                            {% endif %}
+                        </td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+    <div class="card bg-base-300 shadow-xl">
+        <div class="card-body">
+            <h3 class="card-title">🎯 Challenges Más Intentados</h3>
+            <div class="space-y-2 mt-4">
+                {% for challenge_stat in most_attempted %}
+                <div class="flex items-center justify-between p-3 bg-base-200 rounded-lg">
+                    <div class="flex-1">
+                        <p class="font-semibold text-sm">{{ challenge_stat.challenge__title }}</p>
+                        <span class="badge badge-primary badge-xs">
+                            {{ challenge_stat.challenge__category__name }}
+                        </span>
+                    </div>
+                    <div class="text-right">
+                        <div class="badge badge-info">{{ challenge_stat.total }} intentos</div>
+                        <div class="text-xs text-base-content/70 mt-1">
+                            {{ challenge_stat.correct }} correctos
+                        </div>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="card bg-base-300 shadow-xl">
+        <div class="card-body">
+            <h3 class="card-title">⚡ Actividad Reciente</h3>
+            <div class="space-y-2 mt-4 max-h-96 overflow-y-auto">
+                {% for submission in recent_submissions %}
+                <div class="flex items-start gap-3 p-2 bg-base-200 rounded-lg">
+                    <div class="avatar placeholder">
+                        <div class="bg-primary text-primary-content rounded-full w-8">
+                            <span class="text-xs">{{ submission.submitted_by.username|first|upper }}</span>
+                        </div>
+                    </div>
+                    <div class="flex-1 min-w-0">
+                        <p class="text-sm">
+                            <span class="font-semibold">{{ submission.submitted_by.username }}</span>
+                            {% if submission.is_correct %}
+                            <span class="text-success">resolvió</span>
+                            {% else %}
+                            <span class="text-error">intentó</span>
+                            {% endif %}
+                            <span class="font-semibold">{{ submission.challenge.title }}</span>
+                        </p>
+                        <p class="text-xs text-base-content/50">
+                            {{ submission.submitted_at|timesince }} atrás
+                        </p>
+                    </div>
+                    {% if submission.is_correct %}
+                    <span class="badge badge-success badge-sm">✓</span>
+                    {% else %}
+                    <span class="badge badge-error badge-sm">✗</span>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+
+{% else %}
+<div class="card bg-base-200 shadow-xl">
+    <div class="card-body items-center text-center py-16">
+        <div class="text-6xl mb-4">📝</div>
+        <h2 class="card-title text-2xl">No hay submissions registradas</h2>
+        <p class="text-base-content/70 max-w-md mt-2">
+            Cuando los participantes intenten resolver challenges, aparecerán aquí.
+        </p>
+    </div>
+</div>
+{% endif %}
+{% endblock %}
+
+

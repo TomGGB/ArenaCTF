@@ -1,0 +1,112 @@
+{% extends "admin_panel/base.html" %}
+
+{% block title %}Editar Categoría - Panel Admin{% endblock %}
+
+{% block admin_content %}
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-3xl font-bold text-primary">Editar Categoría</h1>
+        <p class="text-base-content/70 mt-1">Modificar detalles de la categoría</p>
+    </div>
+    <a href="{% url 'admin_panel:categories_list' %}" class="btn btn-outline btn-sm">
+        <span>← Volver a Categorías</span>
+    </a>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2">
+        <div class="card bg-base-200 shadow-xl">
+            <div class="card-body">
+                <form method="POST" class="space-y-4">
+                    {% csrf_token %}
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">Nombre de la Categoría</span>
+                        </label>
+                        <input type="text" name="name" value="{{ category.name }}" 
+                               class="input input-bordered w-full" required>
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">Descripción (Opcional)</span>
+                        </label>
+                        <textarea name="description" rows="4" 
+                                  class="textarea textarea-bordered w-full">{{ category.description }}</textarea>
+                    </div>
+
+                    <div class="card-actions justify-end pt-4">
+                        <a href="{% url 'admin_panel:categories_list' %}" class="btn btn-ghost">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            💾 Guardar Cambios
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="lg:col-span-1">
+        <div class="card bg-base-300 shadow-xl">
+            <div class="card-body">
+                <h3 class="card-title text-lg">📊 Estadísticas</h3>
+                
+                <div class="stats stats-vertical shadow bg-base-200 mt-4">
+                    <div class="stat py-3">
+                        <div class="stat-title text-xs">Total Challenges</div>
+                        <div class="stat-value text-3xl text-primary">
+                            {{ category.challenge_set.count }}
+                        </div>
+                    </div>
+                    
+                    <div class="stat py-3">
+                        <div class="stat-title text-xs">Challenges Activos</div>
+                        <div class="stat-value text-3xl text-success">
+                            {{ active_challenges_count }}
+                        </div>
+                    </div>
+                    
+                    <div class="stat py-3">
+                        <div class="stat-title text-xs">Total Solves</div>
+                        <div class="stat-value text-3xl text-info">
+                            {{ total_solves }}
+                        </div>
+                    </div>
+                </div>
+
+                <div class="divider"></div>
+
+                <div class="alert alert-warning text-sm">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-5 h-5">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                    </svg>
+                    <span>
+                        Cambiar el nombre afectará cómo se muestra en todos los challenges asociados.
+                    </span>
+                </div>
+            </div>
+        </div>
+
+        {% if category.challenge_set.count > 0 %}
+        <div class="card bg-base-200 shadow-xl mt-4">
+            <div class="card-body">
+                <h3 class="card-title text-sm">🎯 Challenges en esta categoría</h3>
+                <div class="space-y-2 mt-2 max-h-64 overflow-y-auto">
+                    {% for challenge in category.challenge_set.all %}
+                    <div class="flex items-center justify-between p-2 bg-base-300 rounded">
+                        <span class="text-sm truncate">{{ challenge.title }}</span>
+                        <span class="badge badge-sm">{{ challenge.points }}pts</span>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
+
+

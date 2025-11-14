@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}Panel de Administración{% endblock %} - {{ ctf_name }}</title>
+    
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'gaming': ['Rajdhani', 'sans-serif'],
+                        'mono': ['Space Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+</head>
+<body data-theme="dark" class="bg-base-100">
+    <!-- Navbar -->
+    <div class="navbar bg-base-300 border-b border-base-content/10 sticky top-0 z-50">
+        <div class="flex-1">
+            <a href="{% url 'admin_panel:dashboard' %}" class="btn btn-ghost normal-case text-2xl font-gaming text-success">
+                ⚙️ Panel Admin
+            </a>
+        </div>
+        <div class="flex-none gap-2">
+            <a href="{% url 'scoreboard:dashboard' %}" class="btn btn-ghost btn-sm font-gaming">
+                ← Volver al CTF
+            </a>
+            <div class="dropdown dropdown-end">
+                <label tabindex="0" class="btn btn-ghost btn-circle avatar placeholder">
+                    <div class="w-10 rounded-full bg-success text-success-content">
+                        <span>{{ request.user.username|first|upper }}</span>
+                    </div>
+                </label>
+                <ul tabindex="0" class="mt-3 p-2 shadow menu menu-sm dropdown-content bg-base-300 rounded-box w-52">
+                    <li class="menu-title font-gaming">
+                        <span>{{ request.user.username }}</span>
+                    </li>
+                    <li><a href="{% url 'logout' %}">Cerrar Sesión</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="flex">
+        <!-- Sidebar -->
+        <div class="w-64 bg-base-300 border-r border-base-content/10">
+            <div class="sticky top-[65px] p-4">
+                <ul class="menu font-gaming">
+                    <li class="menu-title">
+                        <span>General</span>
+                    </li>
+                    <li>
+                        <a href="{% url 'admin_panel:dashboard' %}" class="{% if request.resolver_match.url_name == 'dashboard' %}active{% endif %}">
+                            📊 Dashboard
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'admin_panel:ctf_config' %}" class="{% if 'config' in request.path %}active{% endif %}">
+                            ⚙️ Configuración CTF
+                        </a>
+                    </li>
+                    
+                    <li class="menu-title mt-4">
+                        <span>Challenges</span>
+                    </li>
+                    <li>
+                        <a href="{% url 'admin_panel:challenges_list' %}" class="{% if 'challenges' in request.path %}active{% endif %}">
+                            🎯 Challenges
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'admin_panel:categories_list' %}" class="{% if 'categories' in request.path %}active{% endif %}">
+                            📁 Categorías
+                        </a>
+                    </li>
+                    
+                    <li class="menu-title mt-4">
+                        <span>Participantes</span>
+                    </li>
+                    <li>
+                        <a href="{% url 'admin_panel:teams_list' %}" class="{% if 'teams' in request.path %}active{% endif %}">
+                            👥 Equipos
+                        </a>
+                    </li>
+                    <li>
+                        <a href="{% url 'admin_panel:users_list' %}" class="{% if 'users' in request.path %}active{% endif %}">
+                            👤 Usuarios
+                        </a>
+                    </li>
+                    
+                    <li class="menu-title mt-4">
+                        <span>Actividad</span>
+                    </li>
+                    <li>
+                        <a href="{% url 'admin_panel:submissions_list' %}" class="{% if 'submissions' in request.path %}active{% endif %}">
+                            📝 Submissions
+                        </a>
+                    </li>
+                </ul>
+            </div>
+        </div>
+
+        <!-- Main Content -->
+        <div class="flex-1 p-8 min-h-screen">
+            <!-- Messages -->
+            {% if messages %}
+            <div class="mb-6 space-y-2">
+                {% for message in messages %}
+                <div class="alert alert-{{ message.tags }} shadow-lg">
+                    <div>
+                        <span>{{ message }}</span>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+            {% endif %}
+
+            {% block admin_content %}{% endblock %}
+        </div>
+    </div>
+</body>
+</html>
+
+

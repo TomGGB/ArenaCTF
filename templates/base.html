@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% block title %}{{ ctf_name }}{% endblock %}</title>
+    
+    <!-- Tailwind CSS + DaisyUI -->
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- Google Fonts: Minimal Gaming Style -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'gaming': ['Rajdhani', 'sans-serif'],
+                        'mono': ['Space Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Rajdhani', sans-serif;
+        }
+    </style>
+
+    {% block extra_css %}{% endblock %}
+</head>
+<body data-theme="dark" class="bg-base-100">
+    <!-- Navbar -->
+    <div class="navbar bg-base-300 border-b border-base-content/10 sticky top-0 z-50">
+        <div class="navbar-start">
+            <div class="dropdown">
+                <div tabindex="0" role="button" class="btn btn-ghost lg:hidden">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h8m-8 6h16" />
+                    </svg>
+                </div>
+                <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-300 rounded-box z-[1] mt-3 w-52 p-2 shadow">
+                    <li><a href="/" class="font-gaming">Dashboard</a></li>
+                    <li><a href="/challenges/" class="font-gaming">Challenges</a></li>
+                    <li><a href="/teams/" class="font-gaming">Teams</a></li>
+                </ul>
+            </div>
+            <a href="/" class="btn btn-ghost text-xl font-gaming font-bold">{{ ctf_name }}</a>
+        </div>
+        <div class="navbar-center hidden lg:flex">
+            <ul class="menu menu-horizontal px-1">
+                <li><a href="/" class="font-gaming">Dashboard</a></li>
+                <li><a href="/challenges/" class="font-gaming">Challenges</a></li>
+                <li><a href="/teams/" class="font-gaming">Teams</a></li>
+                {% if user.is_authenticated and user.is_staff %}
+                <li><a href="/display/" class="font-gaming text-warning">🖥️ Pantalla Pública</a></li>
+                {% endif %}
+            </ul>
+        </div>
+        <div class="navbar-end gap-2">
+            {% if user.is_authenticated %}
+                <div class="dropdown dropdown-end">
+                    <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
+                        <div class="w-10 rounded-full bg-primary text-primary-content flex items-center justify-center">
+                            <span class="text-lg font-bold">{{ user.username|first|upper }}</span>
+                        </div>
+                    </div>
+                    <ul tabindex="0" class="menu menu-sm dropdown-content bg-base-300 rounded-box z-[1] mt-3 w-52 p-2 shadow">
+                        <li class="menu-title">
+                            <span class="font-gaming text-primary">{{ user.username }}</span>
+                        </li>
+                        <li><a href="{% url 'users:profile' %}" class="font-gaming">🧑‍💻 Mi Perfil</a></li>
+                        {% if user.teams.exists %}
+                        <li><a href="/teams/{{ user.teams.first.id }}/" class="font-gaming">👥 Mi Equipo</a></li>
+                        {% else %}
+                        <li><a href="/teams/" class="font-gaming">👥 Ver Equipos</a></li>
+                        {% endif %}
+                        {% if user.is_staff %}
+                        <div class="divider my-1"></div>
+                        <li><a href="{% url 'admin_panel:dashboard' %}" class="font-gaming text-success">⚙️ Panel Admin</a></li>
+                        {% endif %}
+                        <div class="divider my-1"></div>
+                        <li><a href="/logout/" class="font-gaming text-error">🚪 Cerrar Sesión</a></li>
+                    </ul>
+                </div>
+            {% else %}
+                <a href="/login/" class="btn btn-success btn-sm font-gaming">Login</a>
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Notifications Container -->
+    <div id="notifications" class="toast toast-end z-50"></div>
+
+    <!-- Main Content -->
+    <main class="min-h-screen">
+        {% block content %}{% endblock %}
+    </main>
+
+    <!-- WebSocket Script for Real-time Updates -->
+    <script>
+        const ws = new WebSocket('ws://' + window.location.host + '/ws/scoreboard/');
+        
+        ws.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            showNotification(data.message, data.type || 'success');
+            
+            // Reload page on flag solve to update scoreboard
+            if (data.type === 'flag_solved' || data.type === 'first_blood') {
+                setTimeout(() => location.reload(), 2000);
+            }
+        };
+
+        function showNotification(message, type = 'success') {
+            const alertClass = type === 'error' ? 'alert-error' : 
+                              type === 'first_blood' ? 'alert-warning' : 'alert-success';
+            
+            const notification = document.createElement('div');
+            notification.className = `alert ${alertClass}`;
+            notification.innerHTML = `<span class="font-gaming text-sm">${message}</span>`;
+            
+            document.getElementById('notifications').appendChild(notification);
+            
+            setTimeout(() => notification.remove(), 4000);
+        }
+    </script>
+
+    {% block extra_js %}{% endblock %}
+</body>
+</html>

@@ -1,0 +1,102 @@
+{% extends "admin_panel/base.html" %}
+
+{% block title %}Categorías - Panel Admin{% endblock %}
+
+{% block admin_content %}
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-3xl font-bold text-primary">Categorías</h1>
+        <p class="text-base-content/70 mt-1">Gestiona las categorías de challenges</p>
+    </div>
+    <a href="{% url 'admin_panel:category_create' %}" class="btn btn-primary">
+        <span>➕ Nueva Categoría</span>
+    </a>
+</div>
+
+{% if categories %}
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+    {% for category in categories %}
+    <div class="card bg-base-200 shadow-xl hover:shadow-2xl transition-shadow">
+        <div class="card-body">
+            <div class="flex items-start justify-between">
+                <h2 class="card-title text-2xl">{{ category.name }}</h2>
+                <div class="dropdown dropdown-end">
+                    <label tabindex="0" class="btn btn-ghost btn-sm btn-circle">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-5 h-5 stroke-current">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 5v.01M12 12v.01M12 19v.01M12 6a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2zm0 7a1 1 0 110-2 1 1 0 010 2z" />
+                        </svg>
+                    </label>
+                    <ul tabindex="0" class="dropdown-content z-[1] menu p-2 shadow bg-base-300 rounded-box w-52">
+                        <li>
+                            <a href="{% url 'admin_panel:category_edit' category.id %}" class="text-info">
+                                ✏️ Editar
+                            </a>
+                        </li>
+                        <li>
+                            <a href="{% url 'admin_panel:category_delete' category.id %}" class="text-error">
+                                🗑️ Eliminar
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+
+            {% if category.description %}
+            <p class="text-sm text-base-content/70 line-clamp-2">{{ category.description }}</p>
+            {% else %}
+            <p class="text-sm text-base-content/50 italic">Sin descripción</p>
+            {% endif %}
+
+            <div class="divider my-2"></div>
+
+            <div class="stats stats-vertical bg-base-300 shadow">
+                <div class="stat py-3">
+                    <div class="stat-title text-xs">Total Challenges</div>
+                    <div class="stat-value text-2xl text-primary">{{ category.challenge_set.count }}</div>
+                </div>
+                <div class="stat py-3">
+                    <div class="stat-title text-xs">Challenges Activos</div>
+                    <div class="stat-value text-2xl text-success">
+                        {{ category.challenge_set.filter.count }}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card-actions justify-end mt-4">
+                <a href="{% url 'admin_panel:category_edit' category.id %}" 
+                   class="btn btn-sm btn-outline btn-info">
+                    ✏️ Editar
+                </a>
+            </div>
+        </div>
+    </div>
+    {% endfor %}
+</div>
+{% else %}
+<div class="card bg-base-200 shadow-xl">
+    <div class="card-body items-center text-center py-16">
+        <div class="text-6xl mb-4">📂</div>
+        <h2 class="card-title text-2xl">No hay categorías creadas</h2>
+        <p class="text-base-content/70 max-w-md">
+            Las categorías te ayudan a organizar tus challenges por tipo o temática.
+        </p>
+        <div class="card-actions mt-6">
+            <a href="{% url 'admin_panel:category_create' %}" class="btn btn-primary">
+                ➕ Crear Primera Categoría
+            </a>
+        </div>
+    </div>
+</div>
+{% endif %}
+
+<div class="mt-6 alert alert-info">
+    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+    </svg>
+    <span>
+        💡 <strong>Tip:</strong> Ejemplos comunes de categorías: Web, Crypto, Forensics, Reversing, PWN, OSINT, Misc
+    </span>
+</div>
+{% endblock %}
+
+

@@ -1,0 +1,139 @@
+{% extends "admin_panel/base.html" %}
+
+{% block title %}Eliminar Equipo - Panel Admin{% endblock %}
+
+{% block admin_content %}
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-3xl font-bold text-error">⚠️ Eliminar Equipo</h1>
+        <p class="text-base-content/70 mt-1">Esta acción no se puede deshacer</p>
+    </div>
+    <a href="{% url 'admin_panel:teams_list' %}" class="btn btn-outline btn-sm">
+        <span>← Volver a Equipos</span>
+    </a>
+</div>
+
+<div class="card bg-base-200 shadow-xl border-2 border-error">
+    <div class="card-body">
+        <div class="flex items-center gap-4 mb-4">
+            <div class="avatar placeholder">
+                <div class="bg-primary text-primary-content rounded-full w-16">
+                    <span class="text-2xl">{{ team.name|first|upper }}</span>
+                </div>
+            </div>
+            <div>
+                <h2 class="card-title text-3xl">{{ team.name }}</h2>
+                <p class="text-sm text-base-content/70">Creado el {{ team.created_at|date:"d/m/Y" }}</p>
+            </div>
+        </div>
+
+        <div class="divider"></div>
+
+        <div class="alert alert-error">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div class="w-full">
+                <h3 class="font-bold">¡Cuidado! Esta acción eliminará permanentemente:</h3>
+                <ul class="list-disc list-inside text-sm mt-2 space-y-1">
+                    <li>El equipo <strong>"{{ team.name }}"</strong></li>
+                    <li><strong>{{ team.members.count }} miembro(s)</strong> del equipo (los usuarios seguirán existiendo)</li>
+                    <li><strong>{{ submission_count }} submission(s)</strong> realizadas por el equipo</li>
+                    <li><strong>{{ first_blood_count }} first blood(s)</strong> conseguidas</li>
+                    <li>Todo el historial y progreso del equipo</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mt-6">
+            <div class="stat bg-base-300 rounded-lg">
+                <div class="stat-title">Puntaje</div>
+                <div class="stat-value text-2xl text-success">{{ team.score }}</div>
+            </div>
+            <div class="stat bg-base-300 rounded-lg">
+                <div class="stat-title">Miembros</div>
+                <div class="stat-value text-2xl text-info">{{ team.members.count }}</div>
+            </div>
+            <div class="stat bg-base-300 rounded-lg">
+                <div class="stat-title">Solves</div>
+                <div class="stat-value text-2xl text-primary">{{ solved_count }}</div>
+            </div>
+            <div class="stat bg-base-300 rounded-lg">
+                <div class="stat-title">First Bloods</div>
+                <div class="stat-value text-2xl text-error">{{ first_blood_count }}</div>
+            </div>
+        </div>
+
+        {% if team.members.exists %}
+        <div class="mt-6">
+            <h3 class="font-semibold mb-3 flex items-center gap-2">
+                <span>👥</span>
+                <span>Miembros que quedarán sin equipo:</span>
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                {% for member in team.members.all %}
+                <div class="flex items-center gap-3 p-3 bg-base-300 rounded-lg">
+                    <div class="avatar placeholder">
+                        <div class="bg-primary text-primary-content rounded-full w-10">
+                            <span class="text-sm">{{ member.username|first|upper }}</span>
+                        </div>
+                    </div>
+                    <div class="flex-1">
+                        <p class="font-semibold">{{ member.username }}</p>
+                        <p class="text-xs text-base-content/70">{{ member.email }}</p>
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+        {% endif %}
+
+        <div class="divider"></div>
+
+        <div class="alert alert-info">
+            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span class="text-sm">
+                <strong>Nota:</strong> Los usuarios NO serán eliminados. Solo perderán su membresía al equipo 
+                y podrán unirse a otro equipo o crear uno nuevo.
+            </span>
+        </div>
+
+        <form method="POST" class="mt-6">
+            {% csrf_token %}
+            
+            <div class="form-control mb-4">
+                <label class="label">
+                    <span class="label-text font-semibold">
+                        Para confirmar, escribe el nombre del equipo: <code class="text-error">{{ team.name }}</code>
+                    </span>
+                </label>
+                <input type="text" name="confirm_name" placeholder="{{ team.name }}" 
+                       class="input input-bordered" required>
+            </div>
+
+            <div class="card-actions justify-end gap-3">
+                <a href="{% url 'admin_panel:teams_list' %}" class="btn btn-outline">
+                    ← Cancelar
+                </a>
+                <button type="submit" class="btn btn-error">
+                    🗑️ Confirmar Eliminación
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+<div class="mt-6 alert alert-warning">
+    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+    <span>
+        💡 <strong>Alternativa:</strong> Si solo quieres descalificar al equipo temporalmente, 
+        considera crear un sistema de "equipos inactivos" en lugar de eliminarlos.
+    </span>
+</div>
+{% endblock %}
+
+

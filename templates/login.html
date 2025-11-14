@@ -1,0 +1,56 @@
+{% extends 'base.html' %}
+
+{% block title %}Login - {{ ctf_name }}{% endblock %}
+
+{% block content %}
+<div class="hero min-h-screen">
+    <div class="hero-content flex-col">
+        <div class="text-center mb-4">
+            <h1 class="text-4xl font-gaming font-bold text-success">Iniciar Sesión</h1>
+            <p class="text-sm opacity-60 mt-2">Accede con tu cuenta de administrador</p>
+        </div>
+        
+        <div class="card bg-base-300 w-full max-w-sm shadow-xl border border-base-content/10">
+            <div class="card-body">
+                <form method="post" action="/admin/login/?next={{ next|default:'/' }}">
+                    {% csrf_token %}
+                    
+                    {% if error %}
+                    <div class="alert alert-error mb-4">
+                        <span class="text-sm">{{ error }}</span>
+                    </div>
+                    {% endif %}
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-gaming">Usuario</span>
+                        </label>
+                        <input type="text" name="username" placeholder="admin" required 
+                               class="input input-bordered input-success w-full">
+                    </div>
+                    
+                    <div class="form-control mt-3">
+                        <label class="label">
+                            <span class="label-text font-gaming">Contraseña</span>
+                        </label>
+                        <input type="password" name="password" placeholder="••••••••" required 
+                               class="input input-bordered input-success w-full">
+                    </div>
+                    
+                    <div class="form-control mt-6">
+                        <button type="submit" class="btn btn-success w-full font-gaming">
+                            Ingresar
+                        </button>
+                    </div>
+                </form>
+                
+                <div class="divider text-xs opacity-60">O</div>
+                
+                <a href="/" class="btn btn-ghost btn-sm">
+                    Volver al inicio
+                </a>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

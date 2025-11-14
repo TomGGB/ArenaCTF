@@ -1,0 +1,206 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Dashboard - Panel Admin{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <h1 class="text-4xl font-gaming font-bold text-success">Dashboard</h1>
+        <div class="text-sm opacity-60">
+            Última actualización: {{ ctf_config.start_time|date:"d/m/Y H:i" }}
+        </div>
+    </div>
+
+    <!-- Stats Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="stats shadow border border-base-content/10">
+            <div class="stat">
+                <div class="stat-figure text-success">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path></svg>
+                </div>
+                <div class="stat-title">Challenges</div>
+                <div class="stat-value text-success">{{ total_challenges }}</div>
+                <div class="stat-desc">{{ total_categories }} categorías</div>
+            </div>
+        </div>
+
+        <div class="stats shadow border border-base-content/10">
+            <div class="stat">
+                <div class="stat-figure text-info">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path></svg>
+                </div>
+                <div class="stat-title">Equipos</div>
+                <div class="stat-value text-info">{{ total_teams }}</div>
+                <div class="stat-desc">{{ total_users }} usuarios</div>
+            </div>
+        </div>
+
+        <div class="stats shadow border border-base-content/10">
+            <div class="stat">
+                <div class="stat-figure text-warning">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z"></path></svg>
+                </div>
+                <div class="stat-title">Submissions</div>
+                <div class="stat-value text-warning">{{ total_submissions }}</div>
+                <div class="stat-desc">{{ correct_submissions }} correctas</div>
+            </div>
+        </div>
+
+        <div class="stats shadow border border-base-content/10">
+            <div class="stat">
+                <div class="stat-figure text-error">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="inline-block w-8 h-8 stroke-current"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z"></path></svg>
+                </div>
+                <div class="stat-title">First Bloods</div>
+                <div class="stat-value text-error">{{ total_first_bloods }}</div>
+                <div class="stat-desc">+{{ total_first_bloods|default:0 }} bonus pts</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- CTF Status -->
+    <div class="card bg-base-300 border border-base-content/10">
+        <div class="card-body">
+            <h2 class="card-title font-gaming text-2xl">Estado del CTF</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <div>
+                    <div class="text-sm opacity-60">Estado</div>
+                    <div class="text-lg font-gaming">
+                        {% if ctf_config.is_active %}
+                        <span class="badge badge-success">Activo</span>
+                        {% else %}
+                        <span class="badge badge-error">Inactivo</span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div>
+                    <div class="text-sm opacity-60">Inicio</div>
+                    <div class="text-lg font-mono">
+                        {% if ctf_config.start_time %}
+                        {{ ctf_config.start_time|date:"d/m/Y H:i" }}
+                        {% else %}
+                        No definido
+                        {% endif %}
+                    </div>
+                </div>
+                <div>
+                    <div class="text-sm opacity-60">Fin</div>
+                    <div class="text-lg font-mono">
+                        {% if ctf_config.end_time %}
+                        {{ ctf_config.end_time|date:"d/m/Y H:i" }}
+                        {% else %}
+                        No definido
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+            <div class="card-actions justify-end mt-4">
+                <a href="{% url 'admin_panel:ctf_config' %}" class="btn btn-sm btn-success">
+                    Configurar
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <!-- Recent Submissions -->
+        <div class="card bg-base-300 border border-base-content/10">
+            <div class="card-body">
+                <h2 class="card-title font-gaming text-2xl">Actividad Reciente</h2>
+                <div class="space-y-2 max-h-96 overflow-y-auto">
+                    {% for sub in recent_submissions %}
+                    <div class="p-3 bg-base-200 rounded-lg {% if sub.is_correct %}border-l-4 border-success{% else %}opacity-60{% endif %}">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="font-gaming font-semibold" style="color: {{ sub.team.color }}">
+                                    {{ sub.team.name }}
+                                </div>
+                                <div class="text-xs opacity-60">
+                                    {{ sub.submitted_by.username }} • {{ sub.challenge.title }}
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                {% if sub.is_correct %}
+                                <span class="badge badge-success badge-sm">✓</span>
+                                {% else %}
+                                <span class="badge badge-error badge-sm">✗</span>
+                                {% endif %}
+                                <div class="text-xs opacity-60 mt-1">
+                                    {{ sub.submitted_at|timesince }} ago
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-8 opacity-60">
+                        Sin actividad reciente
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Top Teams -->
+        <div class="card bg-base-300 border border-base-content/10">
+            <div class="card-body">
+                <h2 class="card-title font-gaming text-2xl">Top Equipos</h2>
+                <div class="space-y-2">
+                    {% for team in top_teams %}
+                    <div class="p-3 bg-base-200 rounded-lg">
+                        <div class="flex items-center justify-between">
+                            <div class="flex items-center gap-3">
+                                <div class="text-2xl font-gaming">#{{ forloop.counter }}</div>
+                                <div>
+                                    <div class="font-gaming font-semibold" style="color: {{ team.color }}">
+                                        {{ team.name }}
+                                    </div>
+                                    <div class="text-xs opacity-60">
+                                        {{ team.members.count }} miembros
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="text-right">
+                                <div class="text-2xl font-gaming text-success">
+                                    {{ team.total_score }}
+                                </div>
+                                <div class="text-xs opacity-60">puntos</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-center py-8 opacity-60">
+                        Sin equipos registrados
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Challenges by Category -->
+    <div class="card bg-base-300 border border-base-content/10">
+        <div class="card-body">
+            <h2 class="card-title font-gaming text-2xl">Challenges por Categoría</h2>
+            <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
+                {% for cat in challenges_by_category %}
+                <div class="text-center p-4 bg-base-200 rounded-lg">
+                    <div class="text-3xl mb-2">{{ cat.icon }}</div>
+                    <div class="font-gaming font-semibold">{{ cat.name }}</div>
+                    <div class="text-2xl font-gaming text-success mt-2">
+                        {{ cat.challenge_count }}
+                    </div>
+                    <div class="text-xs opacity-60">challenges</div>
+                </div>
+                {% empty %}
+                <div class="col-span-full text-center py-8 opacity-60">
+                    Sin categorías creadas
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

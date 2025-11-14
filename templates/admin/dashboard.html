@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}Panel de Administración - Arena CTF{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="mb-8">
+        <h1 class="text-4xl font-gaming font-bold text-success mb-2">Panel de Administración</h1>
+        <p class="text-sm opacity-60">Gestión y estadísticas de la plataforma</p>
+    </div>
+
+    <!-- Stats Overview -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-8">
+        <div class="stats shadow border border-base-content/10">
+            <div class="stat">
+                <div class="stat-title text-xs">Total Usuarios</div>
+                <div class="stat-value text-3xl font-gaming text-info">{{ total_users }}</div>
+                <div class="stat-desc text-xs opacity-60">Registrados</div>
+            </div>
+        </div>
+        
+        <div class="stats shadow border border-base-content/10">
+            <div class="stat">
+                <div class="stat-title text-xs">Total Equipos</div>
+                <div class="stat-value text-3xl font-gaming text-success">{{ total_teams }}</div>
+                <div class="stat-desc text-xs opacity-60">Activos</div>
+            </div>
+        </div>
+        
+        <div class="stats shadow border border-base-content/10">
+            <div class="stat">
+                <div class="stat-title text-xs">Challenges</div>
+                <div class="stat-value text-3xl font-gaming text-warning">{{ total_challenges }}</div>
+                <div class="stat-desc text-xs opacity-60">Disponibles</div>
+            </div>
+        </div>
+        
+        <div class="stats shadow border border-base-content/10">
+            <div class="stat">
+                <div class="stat-title text-xs">Flags Capturadas</div>
+                <div class="stat-value text-3xl font-gaming text-error">{{ total_submissions }}</div>
+                <div class="stat-desc text-xs opacity-60">Resoluciones</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="mb-8">
+        <h2 class="text-2xl font-gaming font-bold mb-4">Acciones Rápidas</h2>
+        <div class="flex flex-wrap gap-3">
+            <a href="/admin/auth/user/add/" class="btn btn-success gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                </svg>
+                Nuevo Usuario
+            </a>
+            <a href="/admin/challenges/challenge/add/" class="btn btn-warning gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                </svg>
+                Nuevo Challenge
+            </a>
+            <a href="/admin/teams/team/" class="btn btn-info gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z" />
+                </svg>
+                Ver Equipos
+            </a>
+            <a href="/admin/" class="btn btn-ghost gap-2">
+                <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z" />
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z" />
+                </svg>
+                Admin Django
+            </a>
+        </div>
+    </div>
+
+    <!-- Recent Users -->
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        <div class="card bg-base-300 border border-base-content/10">
+            <div class="card-body">
+                <h2 class="card-title text-xl font-gaming mb-4">Usuarios Recientes</h2>
+                <div class="overflow-x-auto">
+                    <table class="table table-sm">
+                        <thead>
+                            <tr>
+                                <th class="font-gaming">Usuario</th>
+                                <th class="font-gaming">Email</th>
+                                <th class="font-gaming">Registro</th>
+                                <th class="font-gaming">Staff</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            {% for user in recent_users %}
+                            <tr class="hover">
+                                <td class="font-mono">{{ user.username }}</td>
+                                <td class="text-xs opacity-60">{{ user.email|truncatechars:20 }}</td>
+                                <td class="text-xs opacity-60">{{ user.date_joined|timesince }} ago</td>
+                                <td>
+                                    {% if user.is_staff %}
+                                    <span class="badge badge-success badge-xs">Staff</span>
+                                    {% endif %}
+                                </td>
+                            </tr>
+                            {% endfor %}
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Submissions -->
+        <div class="card bg-base-300 border border-base-content/10">
+            <div class="card-body">
+                <h2 class="card-title text-xl font-gaming mb-4">Resoluciones Recientes</h2>
+                <div class="space-y-2 max-h-96 overflow-y-auto">
+                    {% for sub in recent_submissions %}
+                    <div class="p-3 bg-base-200 rounded-lg">
+                        <div class="flex items-center justify-between">
+                            <div>
+                                <div class="font-gaming font-semibold text-sm" style="color: {{ sub.team.color }}">
+                                    {{ sub.team.name }}
+                                </div>
+                                <div class="text-xs opacity-60 mt-1">
+                                    {{ sub.challenge.title }}
+                                    {% if sub.is_correct %}
+                                    <span class="badge badge-success badge-xs ml-2">✓ Correcto</span>
+                                    {% else %}
+                                    <span class="badge badge-error badge-xs ml-2">✗ Incorrecto</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                            <div class="text-xs opacity-60">
+                                {{ sub.submitted_at|timesince }} ago
+                            </div>
+                        </div>
+                    </div>
+                    {% empty %}
+                    <div class="text-sm opacity-60 text-center py-4">Sin actividad reciente</div>
+                    {% endfor %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

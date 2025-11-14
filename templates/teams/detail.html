@@ -1,0 +1,355 @@
+{% extends 'base.html' %}
+
+{% block title %}{{ team.name }} - Detalles del Equipo{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header del Equipo -->
+    <div class="card bg-base-300 border-2 mb-6" style="border-color: {{ team.color }}">
+        <div class="card-body">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-4">
+                    <div class="w-16 h-16 rounded-full flex items-center justify-center text-4xl" 
+                         style="background-color: {{ team.color }}33; border: 3px solid {{ team.color }}">
+                        🏆
+                    </div>
+                    <div>
+                        <h1 class="text-4xl font-gaming font-bold mb-2" style="color: {{ team.color }}">
+                            {{ team.name }}
+                        </h1>
+                        <div class="flex gap-4 text-sm opacity-70">
+                            <span>📅 Creado: {{ team.created_at|date:"d/m/Y" }}</span>
+                            <span>👥 {{ team.members.count }} miembro{{ team.members.count|pluralize }}</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="text-right">
+                    <div class="text-sm opacity-60 mb-1">Puntuación Total</div>
+                    <div class="text-5xl font-gaming font-bold text-success">
+                        {{ team.total_score }}
+                    </div>
+                    <div class="text-sm opacity-60 mt-1">puntos</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Estadísticas -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6">
+        <div class="stats shadow border border-base-content/10">
+            <div class="stat">
+                <div class="stat-title text-xs">Challenges Resueltos</div>
+                <div class="stat-value text-3xl font-gaming text-info">{{ solved_count }}</div>
+                <div class="stat-desc text-xs">de {{ total_challenges }} totales</div>
+            </div>
+        </div>
+        
+        <div class="stats shadow border border-base-content/10">
+            <div class="stat">
+                <div class="stat-title text-xs">First Bloods</div>
+                <div class="stat-value text-3xl font-gaming text-error">{{ first_bloods_count }}</div>
+                <div class="stat-desc text-xs">🩸 +{{ first_bloods_points }} pts</div>
+            </div>
+        </div>
+        
+        <div class="stats shadow border border-base-content/10">
+            <div class="stat">
+                <div class="stat-title text-xs">Ranking</div>
+                <div class="stat-value text-3xl font-gaming text-warning">#{{ rank }}</div>
+                <div class="stat-desc text-xs">Posición actual</div>
+            </div>
+        </div>
+        
+        <div class="stats shadow border border-base-content/10">
+            <div class="stat">
+                <div class="stat-title text-xs">Última Actividad</div>
+                <div class="stat-value text-2xl font-gaming">
+                    {% if last_submission %}
+                        {{ last_submission.submitted_at|timesince }}
+                    {% else %}
+                        --
+                    {% endif %}
+                </div>
+                <div class="stat-desc text-xs">ago</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Contenido Principal -->
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Columna Izquierda -->
+        <div class="lg:col-span-2 space-y-6">
+            <!-- Challenges Resueltos -->
+            <div class="card bg-base-300 border border-base-content/10">
+                <div class="card-body">
+                    <h2 class="text-2xl font-gaming font-bold mb-4">🎯 Challenges Resueltos</h2>
+                    
+                    {% if solved_challenges %}
+                    <div class="space-y-3">
+                        {% for submission in solved_challenges %}
+                        <div class="p-4 bg-base-200 rounded-lg border-l-4" 
+                             style="border-color: {{ submission.challenge.category.color }}">
+                            <div class="flex items-center justify-between">
+                                <div class="flex-1">
+                                    <div class="flex items-center gap-3 mb-2">
+                                        <span class="text-2xl">{{ submission.challenge.category.icon }}</span>
+                                        <div>
+                                            <h3 class="font-gaming font-semibold text-lg">
+                                                {{ submission.challenge.title }}
+                                            </h3>
+                                            <div class="text-xs opacity-60">
+                                                {{ submission.challenge.category.name }}
+                                            </div>
+                                        </div>
+                                    </div>
+                                    <div class="text-xs opacity-60">
+                                        Resuelto: {{ submission.submitted_at|date:"d/m/Y H:i" }}
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="badge badge-success badge-lg font-mono mb-2">
+                                        +{{ submission.challenge.points }} pts
+                                    </div>
+                                    {% if submission.challenge.first_blood.team.id == team.id %}
+                                    <div class="badge badge-error badge-sm">
+                                        🩸 First Blood +50
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-center py-8 opacity-60">
+                        <div class="text-4xl mb-3">🎯</div>
+                        <p>Aún no hay challenges resueltos</p>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Historial de Submissions -->
+            <div class="card bg-base-300 border border-base-content/10">
+                <div class="card-body">
+                    <h2 class="text-2xl font-gaming font-bold mb-4">📊 Historial de Intentos</h2>
+                    
+                    {% if all_submissions %}
+                    <div class="overflow-x-auto">
+                        <table class="table table-sm">
+                            <thead>
+                                <tr class="text-xs">
+                                    <th class="font-gaming">Challenge</th>
+                                    <th class="font-gaming">Resultado</th>
+                                    <th class="font-gaming">Fecha</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for sub in all_submissions %}
+                                <tr class="hover">
+                                    <td>
+                                        <div class="font-gaming text-sm">{{ sub.challenge.title }}</div>
+                                    </td>
+                                    <td>
+                                        {% if sub.is_correct %}
+                                        <span class="badge badge-success badge-xs">✓ Correcto</span>
+                                        {% else %}
+                                        <span class="badge badge-error badge-xs">✗ Incorrecto</span>
+                                        {% endif %}
+                                    </td>
+                                    <td class="text-xs opacity-60">
+                                        {{ sub.submitted_at|date:"d/m H:i" }}
+                                    </td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="text-center py-8 opacity-60">
+                        Sin actividad registrada
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Columna Derecha -->
+        <div class="space-y-6">
+            {% if user in team.members.all %}
+            <!-- Código de Invitación (Solo para miembros) -->
+            <div class="card bg-base-300 border-2 border-primary">
+                <div class="card-body">
+                    <h2 class="text-xl font-gaming font-bold mb-3">🔐 Código de Invitación</h2>
+                    <p class="text-sm opacity-70 mb-4">Comparte este código con otros para que se unan al equipo</p>
+                    
+                    <div class="flex items-center gap-3">
+                        <div class="flex-1 p-4 bg-base-100 rounded-lg text-center">
+                            <div class="text-3xl font-mono font-bold tracking-widest text-primary" id="inviteCode">
+                                {{ team.invite_code }}
+                            </div>
+                        </div>
+                        <button 
+                            onclick="copyInviteCode()" 
+                            class="btn btn-primary btn-square"
+                            title="Copiar código">
+                            📋
+                        </button>
+                    </div>
+                    
+                    <div class="alert alert-info mt-4">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-5 h-5">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                        </svg>
+                        <span class="text-xs">Este código es privado. Solo los miembros pueden verlo.</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Botón de Salir del Equipo -->
+            <div class="card bg-base-300 border border-base-content/10">
+                <div class="card-body">
+                    <form method="post" action="{% url 'teams:leave' team.id %}" onsubmit="return confirm('¿Estás seguro de que quieres salir del equipo?');">
+                        {% csrf_token %}
+                        <button type="submit" class="btn btn-error btn-block">
+                            🚪 Salir del Equipo
+                        </button>
+                    </form>
+                </div>
+            </div>
+            {% endif %}
+            
+            <!-- Miembros del Equipo -->
+            <div class="card bg-base-300 border border-base-content/10">
+                <div class="card-body">
+                    <h2 class="text-2xl font-gaming font-bold mb-4">👥 Miembros del Equipo</h2>
+                    
+                    <div class="space-y-3">
+                        {% for member_stat in member_stats %}
+                        <div class="p-4 bg-base-200 rounded-lg hover:bg-base-100 transition-colors">
+                            <div class="flex items-start justify-between gap-3">
+                                <div class="flex items-center gap-3 flex-1">
+                                    <div class="avatar placeholder">
+                                        <div class="w-12 h-12 rounded-full" style="background-color: {{ team.color }}33; border: 2px solid {{ team.color }}">
+                                            <span class="text-xl font-gaming">{{ member_stat.user.username|first|upper }}</span>
+                                        </div>
+                                    </div>
+                                    <div class="flex-1">
+                                        <div class="font-gaming font-bold text-lg mb-1">{{ member_stat.user.username }}</div>
+                                        <div class="flex gap-2 flex-wrap">
+                                            {% if member_stat.user.is_staff %}
+                                            <span class="badge badge-warning badge-xs">Admin</span>
+                                            {% endif %}
+                                            <span class="badge badge-ghost badge-xs">
+                                                🎯 {{ member_stat.submissions_count }} resueltos
+                                            </span>
+                                            {% if member_stat.first_bloods_count > 0 %}
+                                            <span class="badge badge-error badge-xs">
+                                                🩸 {{ member_stat.first_bloods_count }} FB
+                                            </span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                </div>
+                                <div class="text-right">
+                                    <div class="text-2xl font-gaming font-bold text-success">
+                                        {{ member_stat.total_points }}
+                                    </div>
+                                    <div class="text-xs opacity-60">puntos</div>
+                                    {% if member_stat.first_bloods_points > 0 %}
+                                    <div class="text-xs text-error mt-1">
+                                        +{{ member_stat.first_bloods_points }} bonus
+                                    </div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        </div>
+                        {% empty %}
+                        <div class="text-center py-4 opacity-60">
+                            Sin miembros registrados
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- First Bloods -->
+            {% if first_bloods %}
+            <div class="card bg-base-300 border border-error/30">
+                <div class="card-body">
+                    <h2 class="text-2xl font-gaming font-bold mb-4">🩸 First Bloods</h2>
+                    
+                    <div class="space-y-2">
+                        {% for fb in first_bloods %}
+                        <div class="p-3 bg-base-200 rounded-lg border border-error/20">
+                            <div class="font-gaming font-semibold text-sm">
+                                {{ fb.challenge.title }}
+                            </div>
+                            <div class="text-xs opacity-60 mt-1">
+                                {{ fb.achieved_at|date:"d/m/Y H:i" }}
+                            </div>
+                            <div class="badge badge-error badge-xs mt-2">
+                                +{{ fb.bonus_points }} pts bonus
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+            {% endif %}
+
+            <!-- Progreso por Categoría -->
+            <div class="card bg-base-300 border border-base-content/10">
+                <div class="card-body">
+                    <h2 class="text-2xl font-gaming font-bold mb-4">📈 Progreso por Categoría</h2>
+                    
+                    <div class="space-y-3">
+                        {% for category_stat in category_stats %}
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <div class="flex items-center gap-2">
+                                    <span>{{ category_stat.icon }}</span>
+                                    <span class="font-gaming text-sm">{{ category_stat.name }}</span>
+                                </div>
+                                <span class="text-xs font-mono">{{ category_stat.solved }}/{{ category_stat.total }}</span>
+                            </div>
+                            <progress class="progress progress-success w-full" 
+                                      value="{{ category_stat.solved }}" 
+                                      max="{{ category_stat.total }}"></progress>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón Volver -->
+    <div class="mt-6 text-center">
+        <a href="{% url 'teams:list' %}" class="btn btn-ghost font-gaming">
+            ← Volver a la lista de equipos
+        </a>
+    </div>
+</div>
+
+<script>
+    function copyInviteCode() {
+        const code = document.getElementById('inviteCode').textContent.trim();
+        navigator.clipboard.writeText(code).then(() => {
+            // Mostrar notificación
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '✓';
+            btn.classList.add('btn-success');
+            
+            setTimeout(() => {
+                btn.textContent = originalText;
+                btn.classList.remove('btn-success');
+            }, 2000);
+        }).catch(err => {
+            console.error('Error al copiar:', err);
+            alert('Error al copiar el código');
+        });
+    }
+</script>
+{% endblock %}

@@ -1,0 +1,108 @@
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login - Arena CTF</title>
+    
+    <!-- Tailwind CSS + DaisyUI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'gaming': ['Rajdhani', 'sans-serif'],
+                        'mono': ['Space Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Rajdhani', sans-serif;
+        }
+    </style>
+</head>
+<body data-theme="dark" class="bg-base-100">
+    <div class="hero min-h-screen">
+        <div class="hero-content flex-col lg:flex-row-reverse gap-12">
+            <!-- Branding Side -->
+            <div class="text-center lg:text-left max-w-md">
+                <h1 class="text-6xl font-gaming font-bold text-success mb-4">
+                    Arena CTF
+                </h1>
+                <p class="text-xl opacity-70 mb-6">
+                    Plataforma de competencia de ciberseguridad en tiempo real
+                </p>
+                <div class="space-y-2 text-sm opacity-60">
+                    <p>🎯 Desafíos de hacking</p>
+                    <p>🏆 Rankings en vivo</p>
+                    <p>🩸 Sistema de First Blood</p>
+                    <p>⚡ Actualizaciones en tiempo real</p>
+                </div>
+            </div>
+
+            <!-- Login Form -->
+            <div class="card bg-base-300 w-full max-w-md shadow-2xl border border-base-content/10">
+                <div class="card-body">
+                    <h2 class="text-3xl font-gaming font-bold text-center mb-2">Iniciar Sesión</h2>
+                    <p class="text-center text-sm opacity-60 mb-4">Accede con tus credenciales</p>
+                    
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        {% if messages %}
+                            {% for message in messages %}
+                            <div class="alert alert-error mb-4">
+                                <span class="text-sm">{{ message }}</span>
+                            </div>
+                            {% endfor %}
+                        {% endif %}
+                        
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-gaming">Usuario</span>
+                            </label>
+                            <input type="text" name="username" placeholder="Ingresa tu usuario" required 
+                                   class="input input-bordered input-success w-full" autofocus>
+                        </div>
+                        
+                        <div class="form-control mt-4">
+                            <label class="label">
+                                <span class="label-text font-gaming">Contraseña</span>
+                            </label>
+                            <input type="password" name="password" placeholder="••••••••" required 
+                                   class="input input-bordered input-success w-full">
+                        </div>
+                        
+                        <div class="form-control mt-6">
+                            <button type="submit" class="btn btn-success w-full font-gaming text-lg">
+                                Ingresar
+                            </button>
+                        </div>
+                    </form>
+                    
+                    <div class="divider text-xs opacity-60">¿No tienes cuenta?</div>
+                    
+                    <div class="text-center space-y-2">
+                        <a href="{% url 'register' %}" class="btn btn-outline btn-success w-full font-gaming">
+                            Crear cuenta nueva
+                        </a>
+                        <a href="/" class="btn btn-ghost btn-sm font-gaming">
+                            ← Volver al inicio
+                        </a>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

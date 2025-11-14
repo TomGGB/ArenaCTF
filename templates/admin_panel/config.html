@@ -1,0 +1,200 @@
+{% extends "admin_panel/base.html" %}
+
+{% block title %}Configuración CTF - Panel Admin{% endblock %}
+
+{% block admin_content %}
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-3xl font-bold text-primary">Configuración del CTF</h1>
+        <p class="text-base-content/70 mt-1">Ajusta los parámetros globales de la competencia</p>
+    </div>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2">
+        <div class="card bg-base-200 shadow-xl">
+            <div class="card-body">
+                <h2 class="card-title">⚙️ Configuración General</h2>
+                
+                <form method="POST" class="space-y-6 mt-4">
+                    {% csrf_token %}
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">Nombre del CTF</span>
+                        </label>
+                        <input type="text" name="name" value="{{ config.name }}" 
+                               class="input input-bordered w-full" required>
+                        <label class="label">
+                            <span class="label-text-alt">Nombre que se mostrará en toda la plataforma</span>
+                        </label>
+                    </div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">Fecha de Inicio</span>
+                            </label>
+                            <input type="datetime-local" name="start_time" 
+                                   value="{{ config.start_time|date:'Y-m-d\TH:i' }}" 
+                                   class="input input-bordered w-full" required>
+                        </div>
+
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">Fecha de Fin</span>
+                            </label>
+                            <input type="datetime-local" name="end_time" 
+                                   value="{{ config.end_time|date:'Y-m-d\TH:i' }}" 
+                                   class="input input-bordered w-full" required>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">Puntos de First Blood</span>
+                            </label>
+                            <input type="number" name="first_blood_points" value="{{ config.first_blood_points }}" 
+                                   min="0" step="10" class="input input-bordered w-full" required>
+                            <label class="label">
+                                <span class="label-text-alt">Puntos bonus por resolver primero</span>
+                            </label>
+                        </div>
+
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-semibold">Zona Horaria</span>
+                            </label>
+                            <select name="timezone" class="select select-bordered w-full">
+                                <option value="America/Argentina/Buenos_Aires" {% if config.timezone == "America/Argentina/Buenos_Aires" %}selected{% endif %}>Buenos Aires (UTC-3)</option>
+                                <option value="America/Santiago" {% if config.timezone == "America/Santiago" %}selected{% endif %}>Santiago (UTC-3)</option>
+                                <option value="America/Sao_Paulo" {% if config.timezone == "America/Sao_Paulo" %}selected{% endif %}>São Paulo (UTC-3)</option>
+                                <option value="America/Mexico_City" {% if config.timezone == "America/Mexico_City" %}selected{% endif %}>Ciudad de México (UTC-6)</option>
+                                <option value="America/Bogota" {% if config.timezone == "America/Bogota" %}selected{% endif %}>Bogotá (UTC-5)</option>
+                                <option value="America/Lima" {% if config.timezone == "America/Lima" %}selected{% endif %}>Lima (UTC-5)</option>
+                                <option value="America/Caracas" {% if config.timezone == "America/Caracas" %}selected{% endif %}>Caracas (UTC-4)</option>
+                                <option value="America/New_York" {% if config.timezone == "America/New_York" %}selected{% endif %}>Nueva York (UTC-5)</option>
+                                <option value="Europe/Madrid" {% if config.timezone == "Europe/Madrid" %}selected{% endif %}>Madrid (UTC+1)</option>
+                                <option value="UTC" {% if config.timezone == "UTC" %}selected{% endif %}>UTC</option>
+                            </select>
+                            <label class="label">
+                                <span class="label-text-alt">Zona horaria para mostrar fechas</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="divider"></div>
+
+                    <div class="card-actions justify-end">
+                        <button type="submit" class="btn btn-primary btn-lg">
+                            💾 Guardar Configuración
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="lg:col-span-1 space-y-6">
+        <div class="card bg-base-300 shadow-xl">
+            <div class="card-body">
+                <h3 class="card-title text-lg">📊 Estado Actual</h3>
+                
+                <div class="mt-4 space-y-3">
+                    <div>
+                        <p class="text-xs text-base-content/70">Estado del CTF</p>
+                        {% if is_active %}
+                        <div class="badge badge-success badge-lg gap-2">
+                            <span class="w-2 h-2 bg-success-content rounded-full animate-pulse"></span>
+                            En Curso
+                        </div>
+                        {% elif is_upcoming %}
+                        <div class="badge badge-warning badge-lg gap-2">
+                            <span class="w-2 h-2 bg-warning-content rounded-full"></span>
+                            Próximamente
+                        </div>
+                        {% else %}
+                        <div class="badge badge-error badge-lg gap-2">
+                            <span class="w-2 h-2 bg-error-content rounded-full"></span>
+                            Finalizado
+                        </div>
+                        {% endif %}
+                    </div>
+
+                    <div class="divider my-2"></div>
+
+                    <div>
+                        <p class="text-xs text-base-content/70">Tiempo Restante</p>
+                        {% if is_active %}
+                        <p class="font-semibold text-success">{{ time_remaining }}</p>
+                        {% elif is_upcoming %}
+                        <p class="font-semibold text-warning">Comienza en {{ time_until_start }}</p>
+                        {% else %}
+                        <p class="font-semibold text-error">Finalizado</p>
+                        {% endif %}
+                    </div>
+
+                    <div class="divider my-2"></div>
+
+                    <div>
+                        <p class="text-xs text-base-content/70">Duración Total</p>
+                        <p class="font-semibold">{{ duration }}</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card bg-base-200 shadow-xl">
+            <div class="card-body">
+                <h3 class="card-title text-lg">📈 Estadísticas</h3>
+                
+                <div class="stats stats-vertical shadow bg-base-300 mt-4">
+                    <div class="stat py-3">
+                        <div class="stat-title text-xs">Challenges</div>
+                        <div class="stat-value text-2xl text-primary">{{ total_challenges }}</div>
+                    </div>
+                    <div class="stat py-3">
+                        <div class="stat-title text-xs">Equipos</div>
+                        <div class="stat-value text-2xl text-info">{{ total_teams }}</div>
+                    </div>
+                    <div class="stat py-3">
+                        <div class="stat-title text-xs">Participantes</div>
+                        <div class="stat-value text-2xl text-success">{{ total_users }}</div>
+                    </div>
+                    <div class="stat py-3">
+                        <div class="stat-title text-xs">Submissions</div>
+                        <div class="stat-value text-2xl text-warning">{{ total_submissions }}</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card bg-info/10 border-2 border-info shadow-xl">
+            <div class="card-body">
+                <h3 class="card-title text-sm">💡 Tips</h3>
+                <ul class="text-sm space-y-2 text-base-content/70 mt-2">
+                    <li>✓ Configura las fechas antes de publicar challenges</li>
+                    <li>✓ Deja un buffer de tiempo antes del inicio</li>
+                    <li>✓ Considera zonas horarias de participantes</li>
+                    <li>✓ Prueba la plataforma antes del evento</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+
+<div class="mt-6 alert alert-warning">
+    <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+    </svg>
+    <span>
+        <strong>Importante:</strong> Los cambios en las fechas afectarán inmediatamente la disponibilidad 
+        de los challenges y el acceso a las submissions. Asegúrate de comunicar cualquier cambio a los participantes.
+    </span>
+</div>
+{% endblock %}
+
+

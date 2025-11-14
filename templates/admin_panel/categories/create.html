@@ -1,0 +1,101 @@
+{% extends "admin_panel/base.html" %}
+
+{% block title %}Crear Categoría - Panel Admin{% endblock %}
+
+{% block admin_content %}
+<div class="flex items-center justify-between mb-6">
+    <div>
+        <h1 class="text-3xl font-bold text-primary">Nueva Categoría</h1>
+        <p class="text-base-content/70 mt-1">Crea una categoría para organizar tus challenges</p>
+    </div>
+    <a href="{% url 'admin_panel:categories_list' %}" class="btn btn-outline btn-sm">
+        <span>← Volver a Categorías</span>
+    </a>
+</div>
+
+<div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+    <div class="lg:col-span-2">
+        <div class="card bg-base-200 shadow-xl">
+            <div class="card-body">
+                <form method="POST" class="space-y-4">
+                    {% csrf_token %}
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">Nombre de la Categoría</span>
+                        </label>
+                        <input type="text" name="name" placeholder="Ej: Web Exploitation" 
+                               class="input input-bordered w-full" required>
+                    </div>
+
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">Descripción (Opcional)</span>
+                        </label>
+                        <textarea name="description" rows="4" 
+                                  placeholder="Descripción breve de la categoría..."
+                                  class="textarea textarea-bordered w-full"></textarea>
+                        <label class="label">
+                            <span class="label-text-alt">Esta descripción ayuda a los participantes a entender el tipo de challenges</span>
+                        </label>
+                    </div>
+
+                    <div class="card-actions justify-end pt-4">
+                        <a href="{% url 'admin_panel:categories_list' %}" class="btn btn-ghost">
+                            Cancelar
+                        </a>
+                        <button type="submit" class="btn btn-primary">
+                            ➕ Crear Categoría
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <div class="lg:col-span-1">
+        <div class="card bg-base-300 shadow-xl">
+            <div class="card-body">
+                <h3 class="card-title text-lg">💡 Categorías Comunes</h3>
+                <div class="space-y-2 mt-4">
+                    <div class="badge badge-primary badge-lg gap-2 w-full justify-start">
+                        🌐 Web Exploitation
+                    </div>
+                    <div class="badge badge-success badge-lg gap-2 w-full justify-start">
+                        🔐 Cryptography
+                    </div>
+                    <div class="badge badge-warning badge-lg gap-2 w-full justify-start">
+                        🔍 Forensics
+                    </div>
+                    <div class="badge badge-error badge-lg gap-2 w-full justify-start">
+                        ⚙️ Reverse Engineering
+                    </div>
+                    <div class="badge badge-info badge-lg gap-2 w-full justify-start">
+                        💥 Binary Exploitation (PWN)
+                    </div>
+                    <div class="badge badge-secondary badge-lg gap-2 w-full justify-start">
+                        🕵️ OSINT
+                    </div>
+                    <div class="badge badge-accent badge-lg gap-2 w-full justify-start">
+                        🎲 Miscellaneous
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="card bg-base-200 shadow-xl mt-4">
+            <div class="card-body">
+                <h3 class="card-title text-sm">📋 Tips</h3>
+                <ul class="text-sm space-y-2 text-base-content/70">
+                    <li>✓ Usa nombres descriptivos</li>
+                    <li>✓ Mantén consistencia con CTFs tradicionales</li>
+                    <li>✓ Agrupa challenges similares</li>
+                    <li>✓ No crees demasiadas categorías</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+

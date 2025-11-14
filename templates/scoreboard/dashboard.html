@@ -1,0 +1,148 @@
+{% extends 'base.html' %}
+
+{% block title %}Dashboard - {{ ctf_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-gaming font-bold text-success mb-2">Scoreboard</h1>
+        <p class="text-sm opacity-60">Clasificación en tiempo real</p>
+    </div>
+
+    <!-- Stats -->
+    <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-8">
+        <div class="stats shadow border border-base-content/10">
+            <div class="stat">
+                <div class="stat-title text-xs">Equipos</div>
+                <div class="stat-value text-3xl font-gaming text-success">{{ teams|length }}</div>
+                <div class="stat-desc text-xs opacity-60">Total registrados</div>
+            </div>
+        </div>
+        
+        <div class="stats shadow border border-base-content/10">
+            <div class="stat">
+                <div class="stat-title text-xs">Flags</div>
+                <div class="stat-value text-3xl font-gaming text-warning">{{ recent_submissions|length }}</div>
+                <div class="stat-desc text-xs opacity-60">Challenges resueltos</div>
+            </div>
+        </div>
+        
+        <div class="stats shadow border border-base-content/10">
+            <div class="stat">
+                <div class="stat-title text-xs">First Bloods</div>
+                <div class="stat-value text-3xl font-gaming text-error">{{ first_bloods|length }}</div>
+                <div class="stat-desc text-xs opacity-60">Primeras resoluciones</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Main Content Grid -->
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+        <!-- Scoreboard Table -->
+        <div class="xl:col-span-2">
+            <div class="card bg-base-300 border border-base-content/10">
+                <div class="card-body">
+                    <h2 class="card-title text-2xl font-gaming mb-4">Rankings</h2>
+                    
+                    {% if teams %}
+                    <div class="overflow-x-auto">
+                        <table class="table">
+                            <thead>
+                                <tr>
+                                    <th class="font-gaming">#</th>
+                                    <th class="font-gaming">Equipo</th>
+                                    <th class="font-gaming">Puntos</th>
+                                    <th class="font-gaming">Flags</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                {% for team in teams %}
+                                <tr class="hover">
+                                    <td class="font-mono font-bold">{{ forloop.counter }}</td>
+                                    <td>
+                                        <div class="flex items-center gap-3">
+                                            <div class="w-3 h-3 rounded-full" style="background-color: {{ team.color }}"></div>
+                                            <span class="font-gaming font-semibold">{{ team.name }}</span>
+                                        </div>
+                                    </td>
+                                    <td>
+                                        <span class="badge badge-success font-mono">{{ team.total_score }} pts</span>
+                                    </td>
+                                    <td class="opacity-60">{{ team.solved_count }}</td>
+                                </tr>
+                                {% endfor %}
+                            </tbody>
+                        </table>
+                    </div>
+                    {% else %}
+                    <div class="alert">
+                        <span class="text-sm">No hay equipos registrados aún</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="space-y-6">
+            <!-- First Bloods -->
+            <div class="card bg-base-300 border border-base-content/10">
+                <div class="card-body">
+                    <h3 class="card-title text-xl font-gaming mb-4">🩸 First Bloods</h3>
+                    {% if first_bloods %}
+                    <div class="space-y-2">
+                        {% for fb in first_bloods %}
+                        <div class="p-3 bg-base-200 rounded-lg border border-error/20">
+                            <div class="font-gaming font-semibold text-sm">{{ fb.challenge.title }}</div>
+                            <div class="text-xs opacity-60 mt-1">
+                                <span style="color: {{ fb.team.color }}">{{ fb.team.name }}</span>
+                                <span class="badge badge-error badge-xs ml-2">+{{ fb.bonus_points }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-sm opacity-60">Sin first bloods aún</div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card bg-base-300 border border-base-content/10">
+                <div class="card-body">
+                    <h3 class="card-title text-xl font-gaming mb-4">⚡ Actividad Reciente</h3>
+                    {% if recent_submissions %}
+                    <div class="space-y-2">
+                        {% for sub in recent_submissions|slice:":5" %}
+                        <div class="p-2 bg-base-200 rounded-lg text-xs">
+                            <div class="font-gaming font-semibold" style="color: {{ sub.team.color }}">
+                                {{ sub.team.name }}
+                            </div>
+                            <div class="opacity-60 mt-1">
+                                {{ sub.challenge.title }} • {{ sub.submitted_at|timesince }} ago
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                    {% else %}
+                    <div class="text-sm opacity-60">Sin actividad reciente</div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- WebSocket Live Updates -->
+<script>
+    const ws = new WebSocket('ws://' + window.location.host + '/ws/scoreboard/');
+    
+    ws.onmessage = function(e) {
+        const data = JSON.parse(e.data);
+        if (data.type === 'flag_solved' || data.type === 'first_blood') {
+            setTimeout(() => location.reload(), 1000);
+        }
+    };
+</script>
+{% endblock %}

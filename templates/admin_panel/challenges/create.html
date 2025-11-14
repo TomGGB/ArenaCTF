@@ -1,0 +1,102 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Crear Challenge - Panel Admin{% endblock %}
+
+{% block admin_content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Header -->
+    <div>
+        <h1 class="text-4xl font-gaming font-bold text-success mb-2">Crear Challenge</h1>
+        <p class="opacity-60">Completa los detalles del nuevo desafío</p>
+    </div>
+
+    <!-- Form -->
+    <form method="POST" class="card bg-base-300 border border-base-content/10">
+        <div class="card-body space-y-6">
+            {% csrf_token %}
+            
+            <!-- Title -->
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text font-gaming text-lg">Título del Challenge</span>
+                </label>
+                <input type="text" name="title" placeholder="Buffer Overflow 101" class="input input-bordered input-success w-full font-gaming" required>
+            </div>
+
+            <!-- Category -->
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text font-gaming text-lg">Categoría</span>
+                </label>
+                <select name="category" class="select select-bordered select-success w-full font-gaming" required>
+                    <option disabled selected>Seleccionar categoría</option>
+                    {% for category in categories %}
+                    <option value="{{ category.id }}">{{ category.icon }} {{ category.name }}</option>
+                    {% endfor %}
+                </select>
+                <label class="label">
+                    <span class="label-text-alt"><a href="{% url 'admin_panel:category_create' %}" class="link link-success">Crear nueva categoría</a></span>
+                </label>
+            </div>
+
+            <!-- Points -->
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text font-gaming text-lg">Puntos</span>
+                </label>
+                <input type="number" name="points" value="100" min="10" step="10" class="input input-bordered input-success w-full font-mono" required>
+            </div>
+
+            <!-- Flag -->
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text font-gaming text-lg">Flag</span>
+                </label>
+                <input type="text" name="flag" placeholder="FLAG{example_flag_here}" class="input input-bordered input-success w-full font-mono" required>
+                <label class="label">
+                    <span class="label-text-alt opacity-60">Formato recomendado: FLAG{texto_aqui}</span>
+                </label>
+            </div>
+
+            <!-- Description -->
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text font-gaming text-lg">Descripción</span>
+                </label>
+                <textarea name="description" rows="6" placeholder="Descripción del challenge, instrucciones, etc." class="textarea textarea-bordered textarea-success w-full" required></textarea>
+            </div>
+
+            <!-- Hints -->
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text font-gaming text-lg">Pistas (Opcional)</span>
+                </label>
+                <textarea name="hints" rows="3" placeholder="Pistas o hints para los participantes" class="textarea textarea-bordered textarea-success w-full"></textarea>
+            </div>
+
+            <!-- Is Active -->
+            <div class="form-control">
+                <label class="label cursor-pointer justify-start gap-4">
+                    <input type="checkbox" name="is_active" class="toggle toggle-success" checked>
+                    <span class="label-text font-gaming text-lg">Challenge Activo</span>
+                </label>
+                <label class="label">
+                    <span class="label-text-alt opacity-60">Los participantes solo verán challenges activos</span>
+                </label>
+            </div>
+
+            <!-- Actions -->
+            <div class="card-actions justify-between">
+                <a href="{% url 'admin_panel:challenges_list' %}" class="btn btn-ghost font-gaming">
+                    Cancelar
+                </a>
+                <button type="submit" class="btn btn-success font-gaming">
+                    Crear Challenge
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}
+
+

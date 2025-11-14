@@ -1,0 +1,72 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Eliminar Usuario - Panel Admin{% endblock %}
+
+{% block admin_content %}
+<div class="max-w-2xl mx-auto space-y-6">
+    <div class="card bg-base-300 border-2 border-error shadow-xl">
+        <div class="card-body space-y-6">
+            <h2 class="card-title text-3xl text-error">
+                🗑️ Eliminar Usuario
+            </h2>
+            
+            <div class="alert alert-error">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+                <div>
+                    <h3 class="font-bold">⚠️ ACCIÓN PERMANENTE</h3>
+                    <p class="text-sm">Esta acción NO se puede deshacer. Todos los datos del usuario se eliminarán permanentemente.</p>
+                </div>
+            </div>
+
+            <div class="space-y-4">
+                <div class="stats stats-vertical shadow bg-base-200 w-full">
+                    <div class="stat">
+                        <div class="stat-title">Usuario a Eliminar</div>
+                        <div class="stat-value text-2xl text-error">{{ user_obj.username }}</div>
+                        <div class="stat-desc">{{ user_obj.email }}</div>
+                    </div>
+                    
+                    <div class="stat">
+                        <div class="stat-title">Submissions</div>
+                        <div class="stat-value text-lg">{{ submission_count }}</div>
+                        <div class="stat-desc">Total de submissions realizadas</div>
+                    </div>
+                    
+                    <div class="stat">
+                        <div class="stat-title">First Bloods</div>
+                        <div class="stat-value text-lg">{{ first_blood_count }}</div>
+                        <div class="stat-desc">First bloods conseguidos</div>
+                    </div>
+                </div>
+
+                <div class="alert">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info shrink-0 w-6 h-6">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <div class="text-sm">
+                        <p><strong>Nota:</strong> Se eliminarán todos los registros asociados:</p>
+                        <ul class="list-disc list-inside mt-2">
+                            <li>Todas las submissions del usuario</li>
+                            <li>Todos los first bloods conseguidos</li>
+                            <li>La membresía en equipos</li>
+                            <li>El historial completo de actividad</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <form method="POST" class="card-actions justify-end pt-4 border-t border-base-content/10">
+                {% csrf_token %}
+                <a href="{% url 'admin_panel:user_detail' user_obj.id %}" class="btn btn-ghost">
+                    ← Cancelar
+                </a>
+                <button type="submit" class="btn btn-error">
+                    🗑️ Eliminar Permanentemente
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

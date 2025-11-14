@@ -1,0 +1,62 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Banear Usuario - Panel Admin{% endblock %}
+
+{% block admin_content %}
+<div class="max-w-2xl mx-auto space-y-6">
+    <div class="card bg-base-300 border border-warning shadow-xl">
+        <div class="card-body space-y-6">
+            <h2 class="card-title text-3xl text-warning">
+                ⚠️ {% if user_obj.is_active %}Banear{% else %}Desbanear{% endif %} Usuario
+            </h2>
+            
+            <div class="alert alert-warning">
+                <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+                <div>
+                    <h3 class="font-bold">Confirmación requerida</h3>
+                    <p class="text-sm">
+                        {% if user_obj.is_active %}
+                        ¿Estás seguro de que deseas BANEAR al usuario <strong>{{ user_obj.username }}</strong>?
+                        El usuario no podrá iniciar sesión hasta que sea desbaneado.
+                        {% else %}
+                        ¿Deseas DESBANEAR al usuario <strong>{{ user_obj.username }}</strong>?
+                        El usuario podrá iniciar sesión nuevamente.
+                        {% endif %}
+                    </p>
+                </div>
+            </div>
+
+            <div class="stats shadow bg-base-200">
+                <div class="stat">
+                    <div class="stat-title">Usuario</div>
+                    <div class="stat-value text-2xl">{{ user_obj.username }}</div>
+                    <div class="stat-desc">{{ user_obj.email }}</div>
+                </div>
+                
+                <div class="stat">
+                    <div class="stat-title">Estado Actual</div>
+                    <div class="stat-value text-lg">
+                        {% if user_obj.is_active %}
+                        <span class="badge badge-success badge-lg">Activo</span>
+                        {% else %}
+                        <span class="badge badge-error badge-lg">Baneado</span>
+                        {% endif %}
+                    </div>
+                </div>
+            </div>
+
+            <form method="POST" class="card-actions justify-end pt-4 border-t border-base-content/10">
+                {% csrf_token %}
+                <a href="{% url 'admin_panel:user_detail' user_obj.id %}" class="btn btn-ghost">
+                    Cancelar
+                </a>
+                <button type="submit" class="btn {% if user_obj.is_active %}btn-error{% else %}btn-success{% endif %}">
+                    {% if user_obj.is_active %}🚫 Banear Usuario{% else %}✅ Desbanear Usuario{% endif %}
+                </button>
+            </form>
+        </div>
+    </div>
+</div>
+{% endblock %}

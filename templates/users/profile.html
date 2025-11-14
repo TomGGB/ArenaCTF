@@ -1,0 +1,164 @@
+{% extends "base.html" %}
+
+{% block title %}Mi Perfil - {{ ctf_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="flex items-center justify-between mb-8">
+        <div>
+            <h1 class="text-4xl font-bold font-gaming mb-2">🧑‍💻 Mi Perfil</h1>
+            <p class="text-base-content/70">Administra tu información personal</p>
+        </div>
+    </div>
+
+    <!-- Messages -->
+    {% if messages %}
+        {% for message in messages %}
+        <div role="alert" class="alert {% if message.tags == 'success' %}alert-success{% elif message.tags == 'error' %}alert-error{% else %}alert-info{% endif %} mb-4">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                {% if message.tags == 'success' %}
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                {% elif message.tags == 'error' %}
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" />
+                {% else %}
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                {% endif %}
+            </svg>
+            <span>{{ message }}</span>
+        </div>
+        {% endfor %}
+    {% endif %}
+
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        <!-- Info Card -->
+        <div class="lg:col-span-1">
+            <div class="card bg-base-200 shadow-xl">
+                <div class="card-body items-center text-center">
+                    <div class="avatar placeholder mb-4">
+                        <div class="bg-primary text-primary-content rounded-full w-24">
+                            <span class="text-4xl font-gaming">{{ user.username|first|upper }}</span>
+                        </div>
+                    </div>
+                    <h2 class="card-title font-gaming text-2xl">{{ user.username }}</h2>
+                    <p class="text-base-content/70">{{ user.email }}</p>
+                    
+                    <div class="divider"></div>
+                    
+                    <div class="stats stats-vertical shadow w-full">
+                        <div class="stat">
+                            <div class="stat-title">Equipo</div>
+                            <div class="stat-value text-lg font-gaming">
+                                {% if user.teams.exists %}
+                                    <a href="/teams/{{ user.teams.first.id }}/" class="link link-primary">
+                                        {{ user.teams.first.name }}
+                                    </a>
+                                {% else %}
+                                    <span class="text-base-content/50">Sin equipo</span>
+                                {% endif %}
+                            </div>
+                        </div>
+                        
+                        <div class="stat">
+                            <div class="stat-title">Cuenta Creada</div>
+                            <div class="stat-value text-sm">{{ user.date_joined|date:"d/m/Y" }}</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Edit Form -->
+        <div class="lg:col-span-2">
+            <div class="card bg-base-200 shadow-xl">
+                <div class="card-body">
+                    <h2 class="card-title font-gaming text-2xl mb-4">✏️ Editar Perfil</h2>
+                    
+                    <form method="post" class="space-y-6">
+                        {% csrf_token %}
+                        
+                        <!-- Información Básica (No editable) -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold font-gaming">📋 Información de Cuenta</h3>
+                            
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text font-gaming">Nombre de Usuario</span>
+                                    <span class="label-text-alt">🔒 No editable</span>
+                                </label>
+                                <input type="text" value="{{ user.username }}" class="input input-bordered" disabled>
+                                <label class="label">
+                                    <span class="label-text-alt text-base-content/60">Tu nombre de usuario no puede ser modificado</span>
+                                </label>
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text font-gaming">Correo Electrónico</span>
+                                    <span class="label-text-alt">🔒 No editable</span>
+                                </label>
+                                <input type="email" value="{{ user.email }}" class="input input-bordered" disabled>
+                                <label class="label">
+                                    <span class="label-text-alt text-base-content/60">Tu correo no puede ser modificado</span>
+                                </label>
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <!-- Información Personal (Editable) -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold font-gaming">👤 Información Personal</h3>
+                            
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text font-gaming">Nombre</span>
+                                </label>
+                                <input type="text" name="first_name" value="{{ user.first_name }}" class="input input-bordered" placeholder="Tu nombre">
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text font-gaming">Apellido</span>
+                                </label>
+                                <input type="text" name="last_name" value="{{ user.last_name }}" class="input input-bordered" placeholder="Tu apellido">
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <!-- Cambiar Contraseña -->
+                        <div class="space-y-4">
+                            <h3 class="text-lg font-semibold font-gaming">🔐 Cambiar Contraseña</h3>
+                            <p class="text-sm text-base-content/70">Deja los campos vacíos si no deseas cambiar tu contraseña</p>
+                            
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text font-gaming">Nueva Contraseña</span>
+                                </label>
+                                <input type="password" name="new_password" class="input input-bordered" placeholder="Mínimo 8 caracteres">
+                            </div>
+
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text font-gaming">Confirmar Nueva Contraseña</span>
+                                </label>
+                                <input type="password" name="confirm_password" class="input input-bordered" placeholder="Repite la contraseña">
+                            </div>
+                        </div>
+
+                        <div class="divider"></div>
+
+                        <!-- Botones -->
+                        <div class="card-actions justify-end">
+                            <button type="submit" class="btn btn-primary">
+                                💾 Guardar Cambios
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

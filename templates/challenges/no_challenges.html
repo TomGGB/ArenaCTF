@@ -1,0 +1,162 @@
+{% extends 'base.html' %}
+
+{% block title %}No hay Challenges - {{ ctf_name }}{% endblock %}
+
+{% block content %}
+<div class="min-h-screen flex items-center justify-center px-4">
+    <div class="max-w-2xl w-full">
+        {% if is_staff %}
+        <!-- Vista para Administradores -->
+        <div class="card bg-base-300 border-2 border-warning shadow-2xl">
+            <div class="card-body p-12 text-center">
+                <!-- Icon -->
+                <div class="mb-6">
+                    <div class="text-8xl mb-4">📝</div>
+                    <h1 class="text-4xl font-gaming font-bold text-warning mb-4">
+                        No hay Challenges Creados
+                    </h1>
+                </div>
+
+                <!-- Description -->
+                <div class="max-w-xl mx-auto mb-8">
+                    <p class="text-lg opacity-80 mb-4">
+                        Como administrador, eres el encargado de crear los desafíos para los participantes.
+                    </p>
+                    <div class="alert alert-info shadow-lg">
+                        <div>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current flex-shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <div class="text-left">
+                                <span class="font-semibold">Para comenzar:</span>
+                                <ul class="mt-2 ml-4 space-y-1 opacity-80 text-sm">
+                                    <li>1. Crea categorías (Web, Crypto, Forensics, etc.)</li>
+                                    <li>2. Agrega challenges con sus flags</li>
+                                    <li>3. Configura puntos y dificultad</li>
+                                    <li>4. Activa los challenges para que sean visibles</li>
+                                </ul>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Actions -->
+                <div class="flex flex-col sm:flex-row gap-4 justify-center">
+                    <a href="{% url 'admin_panel:challenge_create' %}" 
+                       class="btn btn-warning btn-lg font-gaming text-xl px-8">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
+                        </svg>
+                        Crear Challenge
+                    </a>
+                    <a href="{% url 'admin_panel:categories_list' %}" 
+                       class="btn btn-outline btn-warning btn-lg font-gaming text-xl px-8">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M7 7h.01M7 3h5c.512 0 1.024.195 1.414.586l7 7a2 2 0 010 2.828l-7 7a2 2 0 01-2.828 0l-7-7A1.994 1.994 0 013 12V7a4 4 0 014-4z" />
+                        </svg>
+                        Gestionar Categorías
+                    </a>
+                </div>
+
+                <!-- Quick Tips -->
+                <div class="mt-8 text-left">
+                    <h3 class="font-gaming text-xl font-bold mb-3 text-center">💡 Consejos Rápidos</h3>
+                    <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+                        <div class="p-3 bg-base-200 rounded-lg">
+                            <div class="font-gaming font-semibold text-sm">Dificultad Gradual</div>
+                            <div class="text-xs opacity-60 mt-1">Comienza con challenges fáciles de 50-100 pts</div>
+                        </div>
+                        <div class="p-3 bg-base-200 rounded-lg">
+                            <div class="font-gaming font-semibold text-sm">Categorías Variadas</div>
+                            <div class="text-xs opacity-60 mt-1">Ofrece diferentes tipos de desafíos</div>
+                        </div>
+                        <div class="p-3 bg-base-200 rounded-lg">
+                            <div class="font-gaming font-semibold text-sm">Flags Claras</div>
+                            <div class="text-xs opacity-60 mt-1">Usa formato FLAG{texto_aqui}</div>
+                        </div>
+                        <div class="p-3 bg-base-200 rounded-lg">
+                            <div class="font-gaming font-semibold text-sm">Descripciones Útiles</div>
+                            <div class="text-xs opacity-60 mt-1">Incluye hints y contexto necesario</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Back Button -->
+                <div class="mt-8">
+                    <a href="{% url 'scoreboard:dashboard' %}" 
+                       class="btn btn-ghost font-gaming">
+                        ← Volver al Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+
+        {% else %}
+        <!-- Vista para Usuarios Normales -->
+        <div class="card bg-base-300 border-2 border-info shadow-2xl">
+            <div class="card-body p-12 text-center">
+                <!-- Icon -->
+                <div class="mb-6">
+                    <div class="text-8xl mb-4">⏳</div>
+                    <h1 class="text-4xl font-gaming font-bold text-info mb-4">
+                        No hay Challenges Disponibles
+                    </h1>
+                </div>
+
+                <!-- Description -->
+                <div class="max-w-xl mx-auto mb-8">
+                    <p class="text-xl opacity-80 mb-4">
+                        Aún no se han publicado desafíos para este CTF.
+                    </p>
+                    <div class="alert shadow-lg">
+                        <div>
+                            <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info flex-shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                            <div>
+                                <h3 class="font-gaming font-bold">¿Qué puedes hacer mientras tanto?</h3>
+                                <div class="text-sm opacity-80 mt-2">
+                                    Los organizadores están preparando los challenges. Mientras tanto, asegúrate de tener tu equipo listo y revisa las reglas del CTF.
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Suggestions -->
+                <div class="space-y-3 max-w-md mx-auto mb-8">
+                    <div class="flex items-center gap-3 p-4 bg-base-200 rounded-lg">
+                        <div class="text-2xl">👥</div>
+                        <div class="text-left flex-1">
+                            <div class="font-gaming font-semibold">Forma tu Equipo</div>
+                            <div class="text-xs opacity-60">Invita a tus compañeros</div>
+                        </div>
+                        <a href="{% url 'teams:list' %}" class="btn btn-sm btn-info">Ver Equipos</a>
+                    </div>
+                    
+                    <div class="flex items-center gap-3 p-4 bg-base-200 rounded-lg">
+                        <div class="text-2xl">📊</div>
+                        <div class="text-left flex-1">
+                            <div class="font-gaming font-semibold">Ver Scoreboard</div>
+                            <div class="text-xs opacity-60">Prepárate para competir</div>
+                        </div>
+                        <a href="{% url 'scoreboard:dashboard' %}" class="btn btn-sm btn-info">Ver Ranking</a>
+                    </div>
+                </div>
+
+                <!-- Motivational Message -->
+                <div class="text-center">
+                    <p class="text-sm opacity-60 italic">
+                        "Los mejores hackers son pacientes y están siempre preparados."
+                    </p>
+                </div>
+
+                <!-- Back Button -->
+                <div class="mt-8">
+                    <a href="{% url 'scoreboard:dashboard' %}" 
+                       class="btn btn-ghost font-gaming">
+                        ← Volver al Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}

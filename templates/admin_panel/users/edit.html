@@ -1,0 +1,157 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}Editar Usuario - Panel Admin{% endblock %}
+
+{% block admin_content %}
+<div class="max-w-4xl mx-auto space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <div>
+            <h1 class="text-4xl font-gaming font-bold text-warning mb-2">✏️ Editar Usuario</h1>
+            <p class="opacity-60">Modificar información y permisos de {{ user_obj.username }}</p>
+        </div>
+        <a href="{% url 'admin_panel:user_detail' user_obj.id %}" class="btn btn-ghost">
+            ← Volver
+        </a>
+    </div>
+
+    <!-- Form -->
+    <form method="POST" class="card bg-base-300 border border-base-content/10">
+        <div class="card-body space-y-6">
+            {% csrf_token %}
+            
+            <!-- Información Básica -->
+            <div class="space-y-4">
+                <h3 class="text-xl font-bold text-primary">📋 Información Básica</h3>
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">Nombre de Usuario</span>
+                        </label>
+                        <input type="text" name="username" value="{{ user_obj.username }}" 
+                               class="input input-bordered" required>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">Email</span>
+                        </label>
+                        <input type="email" name="email" value="{{ user_obj.email }}" 
+                               class="input input-bordered" required>
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">Nombre</span>
+                        </label>
+                        <input type="text" name="first_name" value="{{ user_obj.first_name }}" 
+                               class="input input-bordered">
+                    </div>
+                    
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">Apellido</span>
+                        </label>
+                        <input type="text" name="last_name" value="{{ user_obj.last_name }}" 
+                               class="input input-bordered">
+                    </div>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Permisos -->
+            <div class="space-y-4">
+                <h3 class="text-xl font-bold text-warning">🔐 Permisos y Estado</h3>
+                
+                <div class="space-y-3">
+                    <label class="label cursor-pointer justify-start gap-4">
+                        <input type="checkbox" name="is_active" class="checkbox checkbox-success" 
+                               {% if user_obj.is_active %}checked{% endif %}>
+                        <div>
+                            <span class="label-text font-semibold">Usuario Activo</span>
+                            <p class="text-xs text-base-content/70">Usuario puede iniciar sesión</p>
+                        </div>
+                    </label>
+                    
+                    <label class="label cursor-pointer justify-start gap-4">
+                        <input type="checkbox" name="is_staff" class="checkbox checkbox-warning" 
+                               {% if user_obj.is_staff %}checked{% endif %}>
+                        <div>
+                            <span class="label-text font-semibold">Staff</span>
+                            <p class="text-xs text-base-content/70">Acceso al panel de administración</p>
+                        </div>
+                    </label>
+                    
+                    <label class="label cursor-pointer justify-start gap-4">
+                        <input type="checkbox" name="is_superuser" class="checkbox checkbox-error" 
+                               {% if user_obj.is_superuser %}checked{% endif %}>
+                        <div>
+                            <span class="label-text font-semibold">Superusuario</span>
+                            <p class="text-xs text-base-content/70">Todos los permisos sin restricciones</p>
+                        </div>
+                    </label>
+                </div>
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Equipo -->
+            <div class="space-y-4">
+                <h3 class="text-xl font-bold text-info">👥 Equipo</h3>
+                
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-semibold">Asignar Equipo</span>
+                    </label>
+                    <select name="team" class="select select-bordered">
+                        <option value="">-- Seleccionar Equipo --</option>
+                        {% for team in teams %}
+                        <option value="{{ team.id }}" {% if user_obj.teams.first.id == team.id %}selected{% endif %}>
+                            {{ team.name }}
+                        </option>
+                        {% endfor %}
+                    </select>
+                </div>
+                
+                {% if user_obj.teams.exists %}
+                <label class="label cursor-pointer justify-start gap-4">
+                    <input type="checkbox" name="remove_team" class="checkbox checkbox-error">
+                    <span class="label-text">Remover de equipo actual</span>
+                </label>
+                {% endif %}
+            </div>
+
+            <div class="divider"></div>
+
+            <!-- Cambiar Contraseña -->
+            <div class="space-y-4">
+                <h3 class="text-xl font-bold text-error">🔑 Cambiar Contraseña</h3>
+                
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-semibold">Nueva Contraseña (opcional)</span>
+                    </label>
+                    <input type="password" name="new_password" 
+                           placeholder="Dejar en blanco para no cambiar"
+                           class="input input-bordered">
+                    <label class="label">
+                        <span class="label-text-alt">Solo completa este campo si deseas cambiar la contraseña</span>
+                    </label>
+                </div>
+            </div>
+
+            <!-- Actions -->
+            <div class="card-actions justify-end pt-4 border-t border-base-content/10">
+                <a href="{% url 'admin_panel:user_detail' user_obj.id %}" class="btn btn-ghost">
+                    Cancelar
+                </a>
+                <button type="submit" class="btn btn-warning">
+                    💾 Guardar Cambios
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+{% endblock %}

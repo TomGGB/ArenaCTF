@@ -1,0 +1,56 @@
+# Docker Compose para desarrollo local (sin Nginx)
+version: '3.8'
+
+services:
+  db:
+    image: postgres:15-alpine
+    container_name: ctf_postgres_dev
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    environment:
+      - POSTGRES_DB=ctf_db
+      - POSTGRES_USER=ctf_user
+      - POSTGRES_PASSWORD=ctf_password
+    ports:
+      - "5432:5432"
+    networks:
+      - ctf_network
+
+  redis:
+    image: redis:7-alpine
+    container_name: ctf_redis_dev
+    volumes:
+      - redis_data_dev:/data
+    ports:
+      - "6379:6379"
+    networks:
+      - ctf_network
+
+  web:
+    build: .
+    container_name: ctf_web_dev
+    command: daphne -b 0.0.0.0 -p 8000 ctf_platform.asgi:application
+    volumes:
+      - .:/app
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    environment:
+      - DEBUG=True
+      - DATABASE_HOST=db
+      - REDIS_HOST=redis
+    depends_on:
+      - db
+      - redis
+    networks:
+      - ctf_network
+    restart: unless-stopped
+
+volumes:
+  postgres_data_dev:
+  redis_data_dev:
+
+networks:
+  ctf_network:
+    driver: bridge

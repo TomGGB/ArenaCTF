@@ -1,0 +1,57 @@
+{% extends 'base.html' %}
+
+{% block title %}Register Team - {{ ctf_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-16">
+    <div class="max-w-2xl mx-auto">
+        <div class="card bg-base-300 shadow-2xl border-2 border-success">
+            <div class="card-body">
+                <!-- Header -->
+                <h1 class="text-3xl font-gaming font-bold text-success text-center mb-6">
+                    Registrar Equipo
+                </h1>
+
+                <!-- Registration Form -->
+                <form method="post" class="space-y-6">
+                    {% csrf_token %}
+                    
+                    <!-- Team Name Input -->
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-gaming">Nombre del Equipo</span>
+                        </label>
+                        <input type="text" name="name" required 
+                               placeholder="Ingresa el nombre de tu equipo..."
+                               class="input input-bordered input-success w-full">
+                    </div>
+
+                    <!-- Team Color Picker -->
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-gaming">Color del Equipo</span>
+                        </label>
+                        <input type="color" name="color" value="#00FF41" 
+                               class="w-full h-16 rounded-lg border border-base-content/10 cursor-pointer">
+                        <label class="label">
+                            <span class="label-text-alt text-xs opacity-60">Este color representará a tu equipo</span>
+                        </label>
+                    </div>
+
+                    <!-- Submit Button -->
+                    <button type="submit" 
+                            class="btn btn-success w-full font-gaming">
+                        Crear Equipo
+                    </button>
+                </form>
+
+                <!-- Info Alert -->
+                <div class="alert mt-6 text-xs">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info shrink-0 w-5 h-5"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span>Recibirás un código de acceso único para compartir con tu equipo.</span>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
