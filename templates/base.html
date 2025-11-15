@@ -306,6 +306,95 @@
                 document.getElementById('timeWarningModal').close();
             }
         });
+
+        // Anti-DevTools Protection
+        {% if not user.is_staff %}
+        (function() {
+            // Detectar apertura de DevTools por tamaño de ventana
+            let devtoolsOpen = false;
+            const threshold = 160;
+            
+            function detectDevTools() {
+                const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+                const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+                
+                if ((widthThreshold || heightThreshold) && !devtoolsOpen) {
+                    devtoolsOpen = true;
+                    handleDevToolsOpen();
+                }
+            }
+            
+            // Detectar uso de debugger
+            function detectDebugger() {
+                const start = new Date();
+                debugger;
+                const end = new Date();
+                if (end - start > 100) {
+                    handleDevToolsOpen();
+                }
+            }
+            
+            function handleDevToolsOpen() {
+                document.body.innerHTML = `
+                    <div class="min-h-screen flex items-center justify-center bg-base-100">
+                        <div class="card w-96 bg-base-300 shadow-xl border-4 border-error">
+                            <div class="card-body text-center">
+                                <h2 class="text-6xl mb-4">🔒</h2>
+                                <h3 class="card-title text-2xl font-gaming text-error justify-center">Acceso Restringido</h3>
+                                <p class="text-lg mb-4">Las herramientas de desarrollo están deshabilitadas durante el CTF.</p>
+                                <p class="text-sm opacity-60">Cierra las DevTools para continuar.</p>
+                                <div class="card-actions justify-center mt-4">
+                                    <button onclick="location.reload()" class="btn btn-primary btn-sm">Recargar Página</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Deshabilitar click derecho
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                showCustomAnnouncement(
+                    '⚠️ Advertencia',
+                    'El menú contextual está deshabilitado durante el CTF.',
+                    'warning'
+                );
+                return false;
+            });
+            
+            // Deshabilitar atajos de teclado comunes para DevTools
+            document.addEventListener('keydown', function(e) {
+                // F12
+                if (e.keyCode === 123) {
+                    e.preventDefault();
+                    return false;
+                }
+                // Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
+                if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) {
+                    e.preventDefault();
+                    return false;
+                }
+                // Ctrl+U (Ver código fuente)
+                if (e.ctrlKey && e.keyCode === 85) {
+                    e.preventDefault();
+                    return false;
+                }
+                // Ctrl+S (Guardar página)
+                if (e.ctrlKey && e.keyCode === 83) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+            
+            // Detectar periódicamente
+            setInterval(detectDevTools, 1000);
+            setInterval(detectDebugger, 5000);
+            
+            // Detección inicial
+            detectDevTools();
+        })();
+        {% endif %}
     </script>
 
     {% block extra_js %}{% endblock %}

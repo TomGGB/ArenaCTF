@@ -22,3 +22,9 @@ urlpatterns = [
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
     urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+
+# Configurar handlers de errores personalizados
+handler400 = 'ctf_platform.views.custom_400'
+handler403 = 'ctf_platform.views.custom_403'
+handler404 = 'ctf_platform.views.custom_404'
+handler500 = 'ctf_platform.views.custom_500'

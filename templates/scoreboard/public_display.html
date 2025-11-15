@@ -782,6 +782,64 @@
                 }
             }, { once: true });
         });
+
+        // Anti-DevTools Protection (Display público)
+        (function() {
+            // Detectar apertura de DevTools
+            let devtoolsOpen = false;
+            const threshold = 160;
+            
+            function detectDevTools() {
+                const widthThreshold = window.outerWidth - window.innerWidth > threshold;
+                const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+                
+                if ((widthThreshold || heightThreshold) && !devtoolsOpen) {
+                    devtoolsOpen = true;
+                    handleDevToolsOpen();
+                }
+            }
+            
+            function handleDevToolsOpen() {
+                document.body.innerHTML = `
+                    <div class="min-h-screen flex items-center justify-center bg-base-100">
+                        <div class="card w-96 bg-base-300 shadow-xl border-4 border-error">
+                            <div class="card-body text-center">
+                                <h2 class="text-6xl mb-4">🔒</h2>
+                                <h3 class="card-title text-2xl font-gaming text-error justify-center">Acceso Restringido</h3>
+                                <p class="text-lg mb-4">Esta pantalla de visualización está protegida.</p>
+                                <p class="text-sm opacity-60">Cierra las herramientas de desarrollo para continuar.</p>
+                                <div class="card-actions justify-center mt-4">
+                                    <button onclick="location.reload()" class="btn btn-primary btn-sm">Recargar Página</button>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }
+            
+            // Deshabilitar click derecho
+            document.addEventListener('contextmenu', function(e) {
+                e.preventDefault();
+                return false;
+            });
+            
+            // Deshabilitar atajos de teclado
+            document.addEventListener('keydown', function(e) {
+                // F12, Ctrl+Shift+I/J/C, Ctrl+U, Ctrl+S
+                if (e.keyCode === 123 || 
+                    (e.ctrlKey && e.shiftKey && [73, 74, 67].includes(e.keyCode)) ||
+                    (e.ctrlKey && [85, 83].includes(e.keyCode))) {
+                    e.preventDefault();
+                    return false;
+                }
+            });
+            
+            // Detectar periódicamente
+            setInterval(detectDevTools, 1000);
+            
+            // Detección inicial
+            detectDevTools();
+        })();
     </script>
 </body>
 </html>
