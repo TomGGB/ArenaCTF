@@ -33,7 +33,7 @@
     <!-- Teams Grid -->
     <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
         {% for team in teams %}
-        <a href="{% url 'teams:detail' team.id %}" 
+        <a href="{% url 'teams:team_detail' team.id %}" 
            class="card bg-base-300 border border-base-content/10 hover:border-success transition-all cursor-pointer" 
            style="border-color: {{ team.color }}">
             <div class="card-body p-4">

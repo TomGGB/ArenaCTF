@@ -14,12 +14,19 @@
 </div>
 
 {% if categories %}
-<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+<div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
     {% for category in categories %}
-    <div class="card bg-base-200 shadow-xl hover:shadow-2xl transition-shadow">
+    <div class="card bg-gradient-to-br from-base-200 to-base-300 shadow-xl hover:shadow-2xl transition-all hover:scale-[1.02] border-2 border-base-content/10">
         <div class="card-body">
-            <div class="flex items-start justify-between">
-                <h2 class="card-title text-2xl">{{ category.name }}</h2>
+            <!-- Header con icono y nombre -->
+            <div class="flex items-start justify-between mb-3">
+                <div class="flex items-center gap-3">
+                    <div class="text-5xl">{{ category.icon }}</div>
+                    <div>
+                        <h2 class="card-title text-2xl font-gaming">{{ category.name }}</h2>
+                        <div class="text-xs opacity-60 font-mono">ID: {{ category.id|slice:":8" }}</div>
+                    </div>
+                </div>
                 <div class="dropdown dropdown-end">
                     <label tabindex="0" class="btn btn-ghost btn-sm btn-circle">
                         <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="w-5 h-5 stroke-current">
@@ -41,32 +48,66 @@
                 </div>
             </div>
 
+            <!-- Descripción -->
             {% if category.description %}
-            <p class="text-sm text-base-content/70 line-clamp-2">{{ category.description }}</p>
+            <div class="bg-base-100/50 p-3 rounded-lg mb-3">
+                <p class="text-sm text-base-content/80 line-clamp-3">{{ category.description }}</p>
+            </div>
             {% else %}
-            <p class="text-sm text-base-content/50 italic">Sin descripción</p>
+            <div class="bg-base-100/30 p-3 rounded-lg mb-3">
+                <p class="text-sm text-base-content/40 italic text-center">Sin descripción</p>
+            </div>
             {% endif %}
 
-            <div class="divider my-2"></div>
-
-            <div class="stats stats-vertical bg-base-300 shadow">
-                <div class="stat py-3">
-                    <div class="stat-title text-xs">Total Challenges</div>
-                    <div class="stat-value text-2xl text-primary">{{ category.challenge_set.count }}</div>
+            <!-- Estadísticas en grid -->
+            <div class="grid grid-cols-2 gap-3 mb-3">
+                <div class="bg-primary/10 p-3 rounded-lg border border-primary/20">
+                    <div class="text-xs opacity-70 mb-1">Total</div>
+                    <div class="text-2xl font-bold text-primary">{{ category.challenge_count }}</div>
+                    <div class="text-xs opacity-60">challenges</div>
                 </div>
-                <div class="stat py-3">
-                    <div class="stat-title text-xs">Challenges Activos</div>
-                    <div class="stat-value text-2xl text-success">
-                        {{ category.challenge_set.filter.count }}
-                    </div>
+                
+                <div class="bg-success/10 p-3 rounded-lg border border-success/20">
+                    <div class="text-xs opacity-70 mb-1">Activos</div>
+                    <div class="text-2xl font-bold text-success">{{ category.active_count }}</div>
+                    <div class="text-xs opacity-60">visibles</div>
                 </div>
             </div>
 
-            <div class="card-actions justify-end mt-4">
-                <a href="{% url 'admin_panel:category_edit' category.id %}" 
-                   class="btn btn-sm btn-outline btn-info">
-                    ✏️ Editar
-                </a>
+            <!-- Estadísticas adicionales -->
+            <div class="grid grid-cols-3 gap-2 mb-4">
+                <div class="text-center p-2 bg-base-100/50 rounded">
+                    <div class="text-xs opacity-60">Puntos</div>
+                    <div class="font-bold text-warning">{{ category.total_points|default:"0" }}</div>
+                </div>
+                <div class="text-center p-2 bg-base-100/50 rounded">
+                    <div class="text-xs opacity-60">Resueltos</div>
+                    <div class="font-bold text-info">{{ category.solve_count|default:"0" }}</div>
+                </div>
+                <div class="text-center p-2 bg-base-100/50 rounded">
+                    <div class="text-xs opacity-60">F. Bloods</div>
+                    <div class="font-bold text-error">{{ category.fb_count|default:"0" }}</div>
+                </div>
+            </div>
+
+            <!-- Progress bar -->
+            {% if category.challenge_count > 0 %}
+            <div class="mb-3">
+                <div class="flex justify-between text-xs mb-1">
+                    <span class="opacity-70">Challenges Activos</span>
+                    <span class="font-bold">
+                        {% widthratio category.active_count category.challenge_count 100 %}%
+                    </span>
+                </div>
+                <progress class="progress progress-success w-full" 
+                          value="{{ category.active_count }}" 
+                          max="{{ category.challenge_count }}"></progress>
+            </div>
+            {% endif %}
+
+            <!-- Fecha de creación -->
+            <div class="flex justify-end mt-2">
+                <div class="badge badge-ghost">{{ category.created_at|date:"d/m/Y" }}</div>
             </div>
         </div>
     </div>

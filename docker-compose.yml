@@ -53,6 +53,33 @@ services:
       - ctf_network
     restart: unless-stopped
 
+  time_monitor:
+    build: .
+    container_name: ctf_time_monitor
+    entrypoint: ["/bin/bash", "-c"]
+    command: >
+      "echo 'Esperando a Redis...' &&
+      while ! nc -z redis 6379; do sleep 0.1; done &&
+      echo 'Redis iniciado' &&
+      echo 'Iniciando monitor de tiempo CTF...' &&
+      while true; do
+        python manage.py check_ctf_time
+        sleep 60
+      done"
+    volumes:
+      - .:/app
+    env_file:
+      - .env
+    environment:
+      - DEBUG=True
+      - REDIS_HOST=redis
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - ctf_network
+    restart: unless-stopped
+
 volumes:
   redis_data:
   static_volume:

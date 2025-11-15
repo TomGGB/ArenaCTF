@@ -5,9 +5,12 @@
 {% block admin_content %}
 <div class="space-y-6">
     <!-- Header -->
-    <div class="flex items-center justify-between">
-        <h1 class="text-4xl font-gaming font-bold text-success">Challenges</h1>
-        <a href="{% url 'admin_panel:challenge_create' %}" class="btn btn-success font-gaming">
+    <div class="flex items-center justify-between mb-6">
+        <div>
+            <h1 class="text-4xl font-gaming font-bold text-primary">Challenges</h1>
+            <p class="text-base-content/70 mt-1">Gestiona todos los desafíos del CTF organizados por categoría</p>
+        </div>
+        <a href="{% url 'admin_panel:challenge_create' %}" class="btn btn-success font-gaming gap-2">
             <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m8-8H4" />
             </svg>
@@ -15,69 +18,318 @@
         </a>
     </div>
 
-    <!-- Challenges Table -->
-    <div class="card bg-base-300 border border-base-content/10">
+    <!-- Estadísticas generales -->
+    <div class="stats stats-horizontal shadow-xl bg-base-200 w-full">
+        <div class="stat">
+            <div class="stat-figure text-primary text-3xl">🎯</div>
+            <div class="stat-title">Total Challenges</div>
+            <div class="stat-value text-primary">{{ total_challenges }}</div>
+        </div>
+        <div class="stat">
+            <div class="stat-figure text-success text-3xl">✅</div>
+            <div class="stat-title">Activos</div>
+            <div class="stat-value text-success">{{ active_challenges }}</div>
+        </div>
+        <div class="stat">
+            <div class="stat-figure text-warning text-3xl">⭐</div>
+            <div class="stat-title">Total Puntos</div>
+            <div class="stat-value text-warning">{{ total_points }}</div>
+        </div>
+        <div class="stat">
+            <div class="stat-figure text-info text-3xl">📂</div>
+            <div class="stat-title">Categorías</div>
+            <div class="stat-value text-info">{{ total_categories }}</div>
+        </div>
+    </div>
+
+    <!-- Filtros y Búsqueda -->
+    {% if all_challenges %}
+    <div class="card bg-base-200 shadow-xl">
+        <div class="card-body">
+            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
+                <!-- Búsqueda por texto -->
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-semibold">🔍 Buscar</span>
+                    </label>
+                    <input type="text" id="searchInput" placeholder="Título, descripción o flag..." 
+                           class="input input-bordered input-sm" onkeyup="filterTable()">
+                </div>
+
+                <!-- Filtro por categoría -->
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-semibold">📁 Categoría</span>
+                    </label>
+                    <select id="categoryFilter" class="select select-bordered select-sm" onchange="filterTable()">
+                        <option value="">Todas</option>
+                        {% for category in categories %}
+                        <option value="{{ category.name }}">{{ category.icon }} {{ category.name }}</option>
+                        {% endfor %}
+                    </select>
+                </div>
+
+                <!-- Filtro por estado -->
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-semibold">📊 Estado</span>
+                    </label>
+                    <select id="statusFilter" class="select select-bordered select-sm" onchange="filterTable()">
+                        <option value="">Todos</option>
+                        <option value="active">Activos</option>
+                        <option value="inactive">Inactivos</option>
+                    </select>
+                </div>
+
+                <!-- Filtro por puntos -->
+                <div class="form-control">
+                    <label class="label">
+                        <span class="label-text font-semibold">⭐ Puntos</span>
+                    </label>
+                    <select id="pointsFilter" class="select select-bordered select-sm" onchange="filterTable()">
+                        <option value="">Todos</option>
+                        <option value="0-100">0-100 pts</option>
+                        <option value="101-300">101-300 pts</option>
+                        <option value="301-500">301-500 pts</option>
+                        <option value="501+">501+ pts</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tabla de Challenges -->
+    <div class="card bg-base-200 shadow-xl">
         <div class="card-body p-0">
             <div class="overflow-x-auto">
-                <table class="table table-zebra">
-                    <thead>
-                        <tr class="font-gaming text-base">
-                            <th>Challenge</th>
-                            <th>Categoría</th>
-                            <th>Puntos</th>
-                            <th>Resueltos</th>
-                            <th>Estado</th>
-                            <th>Acciones</th>
+                <table class="table table-zebra table-sm" id="challengesTable">
+                    <thead class="bg-base-300">
+                        <tr class="font-gaming">
+                            <th class="cursor-pointer hover:bg-base-100" onclick="sortTable(0)">
+                                Challenge <span class="text-xs">▼▲</span>
+                            </th>
+                            <th class="cursor-pointer hover:bg-base-100" onclick="sortTable(1)">
+                                Categoría <span class="text-xs">▼▲</span>
+                            </th>
+                            <th class="cursor-pointer hover:bg-base-100 text-center" onclick="sortTable(2)">
+                                Puntos <span class="text-xs">▼▲</span>
+                            </th>
+                            <th class="cursor-pointer hover:bg-base-100 text-center" onclick="sortTable(3)">
+                                Resueltos <span class="text-xs">▼▲</span>
+                            </th>
+                            <th class="text-center">Estado</th>
+                            <th class="text-center">Extras</th>
+                            <th class="text-center">Acciones</th>
                         </tr>
                     </thead>
                     <tbody>
-                        {% for challenge in challenges %}
-                        <tr>
-                            <td>
-                                <div class="font-gaming font-semibold">{{ challenge.title }}</div>
-                                <div class="text-xs opacity-60">{{ challenge.flag }}</div>
-                            </td>
-                            <td>
-                                <div class="badge" style="background-color: {{ challenge.category.color }}33; border-color: {{ challenge.category.color }}">
-                                    {{ challenge.category.icon }} {{ challenge.category.name }}
-                                </div>
-                            </td>
-                            <td>
-                                <span class="badge badge-success font-mono">{{ challenge.points }} pts</span>
-                            </td>
-                            <td>
-                                <span class="font-mono">{{ challenge.solve_count }}</span>
-                            </td>
-                            <td>
-                                {% if challenge.is_active %}
-                                <span class="badge badge-success badge-sm">Activo</span>
-                                {% else %}
-                                <span class="badge badge-ghost badge-sm">Inactivo</span>
-                                {% endif %}
-                            </td>
-                            <td>
-                                <div class="flex gap-2">
-                                    <a href="{% url 'admin_panel:challenge_edit' challenge.id %}" class="btn btn-sm btn-info">
-                                        Editar
-                                    </a>
-                                    <a href="{% url 'admin_panel:challenge_delete' challenge.id %}" class="btn btn-sm btn-error">
-                                        Eliminar
-                                    </a>
-                                </div>
-                            </td>
-                        </tr>
-                        {% empty %}
-                        <tr>
-                            <td colspan="6" class="text-center py-8 opacity-60">
-                                No hay challenges creados. <a href="{% url 'admin_panel:challenge_create' %}" class="link link-success">Crear uno ahora</a>
-                            </td>
-                        </tr>
+                        {% for category, challenges in challenges_by_category.items %}
+                            {% for challenge in challenges %}
+                            <tr class="hover:bg-base-300/50 transition-colors" 
+                                data-category="{{ category.name }}"
+                                data-status="{% if challenge.is_active %}active{% else %}inactive{% endif %}"
+                                data-points="{{ challenge.points }}"
+                                data-search="{{ challenge.title|lower }} {{ challenge.description|lower }} {{ challenge.flag|lower }}">
+                                
+                                <!-- Challenge -->
+                                <td>
+                                    <div class="flex items-center gap-3">
+                                        <div class="text-2xl">{{ category.icon }}</div>
+                                        <div>
+                                            <div class="font-gaming font-semibold">{{ challenge.title }}</div>
+                                            <div class="text-xs opacity-60 line-clamp-1">{{ challenge.description|truncatewords:10 }}</div>
+                                        </div>
+                                    </div>
+                                </td>
+                                
+                                <!-- Categoría -->
+                                <td>
+                                    <div class="badge badge-sm" style="background-color: {{ category.color }}33; border-color: {{ category.color }}; color: {{ category.color }}">
+                                        {{ category.name }}
+                                    </div>
+                                </td>
+                                
+                                <!-- Puntos -->
+                                <td class="text-center">
+                                    <span class="badge badge-warning font-mono font-bold">{{ challenge.points }}</span>
+                                </td>
+                                
+                                <!-- Resueltos -->
+                                <td class="text-center">
+                                    <div class="flex items-center justify-center gap-2">
+                                        <span class="font-mono font-bold">{{ challenge.solve_count }}</span>
+                                        {% if challenge.has_first_blood %}
+                                        <span class="text-error" title="First Blood obtenido">🩸</span>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                
+                                <!-- Estado -->
+                                <td class="text-center">
+                                    {% if challenge.is_active %}
+                                    <div class="badge badge-success badge-sm gap-1">
+                                        <div class="w-2 h-2 rounded-full bg-success-content animate-pulse"></div>
+                                        Activo
+                                    </div>
+                                    {% else %}
+                                    <div class="badge badge-ghost badge-sm">Inactivo</div>
+                                    {% endif %}
+                                </td>
+                                
+                                <!-- Extras -->
+                                <td class="text-center">
+                                    <div class="flex gap-1 justify-center">
+                                        {% if challenge.files %}
+                                        <div class="badge badge-xs badge-info" title="Tiene archivos">📎</div>
+                                        {% endif %}
+                                        {% if challenge.hints %}
+                                        <div class="badge badge-xs badge-warning" title="Tiene pistas">💡</div>
+                                        {% endif %}
+                                    </div>
+                                </td>
+                                
+                                <!-- Acciones -->
+                                <td class="text-center">
+                                    <div class="join">
+                                        <a href="{% url 'admin_panel:challenge_edit' challenge.id %}" 
+                                           class="btn btn-xs btn-info join-item" title="Editar">
+                                            ✏️
+                                        </a>
+                                        <a href="{% url 'admin_panel:challenge_delete' challenge.id %}" 
+                                           class="btn btn-xs btn-error join-item" title="Eliminar">
+                                            🗑️
+                                        </a>
+                                    </div>
+                                </td>
+                            </tr>
+                            {% endfor %}
                         {% endfor %}
                     </tbody>
                 </table>
             </div>
+            
+            <!-- Contador de resultados -->
+            <div class="p-4 text-center text-sm opacity-70">
+                Mostrando <span id="visibleCount" class="font-bold">0</span> de <span id="totalCount" class="font-bold">0</span> challenges
+            </div>
         </div>
     </div>
+
+    <script>
+        // Función para filtrar la tabla
+        function filterTable() {
+            const searchInput = document.getElementById('searchInput').value.toLowerCase();
+            const categoryFilter = document.getElementById('categoryFilter').value;
+            const statusFilter = document.getElementById('statusFilter').value;
+            const pointsFilter = document.getElementById('pointsFilter').value;
+            
+            const table = document.getElementById('challengesTable');
+            const rows = table.getElementsByTagName('tbody')[0].getElementsByTagName('tr');
+            
+            let visibleCount = 0;
+            const totalCount = rows.length;
+            
+            for (let i = 0; i < rows.length; i++) {
+                const row = rows[i];
+                const searchText = row.getAttribute('data-search') || '';
+                const category = row.getAttribute('data-category') || '';
+                const status = row.getAttribute('data-status') || '';
+                const points = parseInt(row.getAttribute('data-points') || '0');
+                
+                let showRow = true;
+                
+                // Filtro de búsqueda
+                if (searchInput && !searchText.includes(searchInput)) {
+                    showRow = false;
+                }
+                
+                // Filtro de categoría
+                if (categoryFilter && category !== categoryFilter) {
+                    showRow = false;
+                }
+                
+                // Filtro de estado
+                if (statusFilter && status !== statusFilter) {
+                    showRow = false;
+                }
+                
+                // Filtro de puntos
+                if (pointsFilter) {
+                    if (pointsFilter === '0-100' && (points < 0 || points > 100)) showRow = false;
+                    if (pointsFilter === '101-300' && (points < 101 || points > 300)) showRow = false;
+                    if (pointsFilter === '301-500' && (points < 301 || points > 500)) showRow = false;
+                    if (pointsFilter === '501+' && points < 501) showRow = false;
+                }
+                
+                row.style.display = showRow ? '' : 'none';
+                if (showRow) visibleCount++;
+            }
+            
+            document.getElementById('visibleCount').textContent = visibleCount;
+            document.getElementById('totalCount').textContent = totalCount;
+        }
+        
+        // Función para ordenar la tabla
+        let sortDirection = {};
+        function sortTable(columnIndex) {
+            const table = document.getElementById('challengesTable');
+            const tbody = table.getElementsByTagName('tbody')[0];
+            const rows = Array.from(tbody.getElementsByTagName('tr'));
+            
+            // Determinar dirección de ordenamiento
+            if (!sortDirection[columnIndex]) sortDirection[columnIndex] = 'asc';
+            else sortDirection[columnIndex] = sortDirection[columnIndex] === 'asc' ? 'desc' : 'asc';
+            
+            rows.sort((a, b) => {
+                let aValue, bValue;
+                
+                if (columnIndex === 2) { // Puntos
+                    aValue = parseInt(a.getAttribute('data-points'));
+                    bValue = parseInt(b.getAttribute('data-points'));
+                } else if (columnIndex === 3) { // Resueltos
+                    aValue = parseInt(a.cells[columnIndex].textContent.trim());
+                    bValue = parseInt(b.cells[columnIndex].textContent.trim());
+                } else {
+                    aValue = a.cells[columnIndex].textContent.trim().toLowerCase();
+                    bValue = b.cells[columnIndex].textContent.trim().toLowerCase();
+                }
+                
+                if (sortDirection[columnIndex] === 'asc') {
+                    return aValue > bValue ? 1 : -1;
+                } else {
+                    return aValue < bValue ? 1 : -1;
+                }
+            });
+            
+            // Reacomodar las filas
+            rows.forEach(row => tbody.appendChild(row));
+        }
+        
+        // Inicializar contador
+        document.addEventListener('DOMContentLoaded', function() {
+            filterTable();
+        });
+    </script>
+    {% else %}
+        <!-- Empty State -->
+        <div class="card bg-base-200 shadow-xl">
+            <div class="card-body items-center text-center py-16">
+                <div class="text-8xl mb-4">🎯</div>
+                <h2 class="card-title text-3xl font-gaming">No hay challenges creados</h2>
+                <p class="text-base-content/70 max-w-md mt-2">
+                    Comienza creando tu primer desafío para el CTF. Asegúrate de tener al menos una categoría creada primero.
+                </p>
+                <div class="card-actions mt-6 gap-3">
+                    <a href="{% url 'admin_panel:category_create' %}" class="btn btn-outline btn-primary font-gaming">
+                        📂 Crear Categoría
+                    </a>
+                    <a href="{% url 'admin_panel:challenge_create' %}" class="btn btn-success font-gaming">
+                        ➕ Crear Challenge
+                    </a>
+                </div>
+            </div>
+        </div>
+    {% endif %}
 </div>
 {% endblock %}
 

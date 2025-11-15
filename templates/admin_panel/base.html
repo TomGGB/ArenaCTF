@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}Panel de Administración{% endblock %} - {{ ctf_name }}</title>
     
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
     
@@ -103,6 +103,15 @@
                     <li>
                         <a href="{% url 'admin_panel:submissions_list' %}" class="{% if 'submissions' in request.path %}active{% endif %}">
                             📝 Submissions
+                        </a>
+                    </li>
+                    
+                    <li class="menu-title mt-4">
+                        <span>Herramientas</span>
+                    </li>
+                    <li>
+                        <a href="{% url 'admin_panel:test_websocket' %}" class="{% if 'test-websocket' in request.path %}active{% endif %}">
+                            🔌 Test WebSocket
                         </a>
                     </li>
                 </ul>

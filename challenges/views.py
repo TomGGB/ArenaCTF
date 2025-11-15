@@ -5,7 +5,8 @@ from django.http import JsonResponse
 from django.utils import timezone
 from .models import Challenge, Submission, FirstBlood, Category
 from teams.models import Team
-from scoreboard.models import CTFConfig
+from scoreboard.models import CTFConfig, Achievement
+from scoreboard.achievements import check_achievements
 from channels.layers import get_channel_layer
 from asgiref.sync import async_to_sync
 
@@ -42,11 +43,17 @@ def challenge_list(request):
             is_correct=True
         ).values_list('challenge_id', flat=True)
     
+    # Verificar si el CTF ha terminado
+    ctf_config = CTFConfig.get_config()
+    ctf_ended = ctf_config.end_time and timezone.now() > ctf_config.end_time
+    
     context = {
         'categories': categories,
         'challenges': challenges,
         'solved_challenges': solved_challenges,
         'user_team': user_team,
+        'ctf_ended': ctf_ended,
+        'ctf_config': ctf_config,
     }
     
     return render(request, 'challenges/list.html', context)
@@ -54,6 +61,12 @@ def challenge_list(request):
 @login_required
 def challenge_detail(request, challenge_id):
     """Vista para ver detalles de un challenge"""
+    # Verificar si el CTF ha terminado
+    ctf_config = CTFConfig.get_config()
+    if ctf_config.end_time and timezone.now() > ctf_config.end_time:
+        messages.error(request, '⏰ El CTF ha finalizado. Los challenges están en modo solo lectura.')
+        return redirect('challenges:list')
+    
     # Verificar que el usuario tenga un equipo (excepto staff/superusers)
     user_team = request.user.teams.first()
     
@@ -85,6 +98,13 @@ def submit_flag(request, challenge_id):
     """Vista para enviar una flag"""
     if request.method != 'POST':
         return JsonResponse({'error': 'Método no permitido'}, status=405)
+    
+    # Verificar si el CTF está activo y dentro del tiempo permitido
+    ctf_config = CTFConfig.get_config()
+    if ctf_config.end_time and timezone.now() > ctf_config.end_time:
+        return JsonResponse({
+            'error': '⏰ El CTF ha finalizado. Ya no se aceptan más submissions. El tiempo límite era: ' + ctf_config.end_time.strftime('%d/%m/%Y %H:%M:%S')
+        }, status=403)
     
     challenge = get_object_or_404(Challenge, id=challenge_id, is_active=True)
     user_team = request.user.teams.first()
@@ -141,30 +161,50 @@ def submit_flag(request, challenge_id):
         # Actualizar puntaje del equipo (después de crear first blood)
         user_team.update_score()
         
-        if is_first_blood:
-            # Enviar notificación de first blood por WebSocket
-            channel_layer = get_channel_layer()
-            async_to_sync(channel_layer.group_send)(
-                'scoreboard',
-                {
-                    'type': 'first_blood_notification',
-                    'team': user_team.name,
-                    'challenge': challenge.title,
-                    'color': user_team.color,
-                }
+        # Verificar logros del equipo y jugador
+        team_achievements = check_achievements(user_team)
+        individual_achievements = check_achievements(user_team, request.user)
+        
+        # Guardar nuevos logros (solo para notificaciones en display mostrar individuales)
+        new_achievements = []
+        
+        # Guardar logros de equipo en DB pero no agregarlos a notificaciones del display
+        for achievement_code in team_achievements:
+            Achievement.objects.get_or_create(
+                code=achievement_code,
+                team=user_team,
+                defaults={'category': 'team'}
             )
         
-        # Enviar notificación de flag correcta por WebSocket
-        channel_layer = get_channel_layer()
-        async_to_sync(channel_layer.group_send)(
-            'scoreboard',
-            {
-                'type': 'flag_solved_notification',
+        # Solo agregar logros individuales a las notificaciones (incluyen info del equipo)
+        for achievement_code in individual_achievements:
+            achievement, created = Achievement.objects.get_or_create(
+                code=achievement_code,
+                user=request.user,
+                defaults={'category': 'individual'}
+            )
+            if created:
+                new_achievements.append({
+                    'type': 'individual',
+                    'code': achievement_code,
+                    'name': achievement.get_info().name,
+                    'icon': achievement.get_info().icon,
+                    'user': request.user.username,
+                    'team': user_team.name,
+                    'color': user_team.color,
+                })
+        
+        # Enviar actualización completa del display con información del evento
+        from scoreboard.views import broadcast_display_update
+        broadcast_display_update(
+            event_type='flag_solved',
+            event_data={
                 'team': user_team.name,
                 'challenge': challenge.title,
                 'points': challenge.points,
                 'color': user_team.color,
                 'is_first_blood': is_first_blood,
+                'new_achievements': new_achievements,
             }
         )
         
@@ -173,6 +213,7 @@ def submit_flag(request, challenge_id):
             'message': '¡Flag correcta! 🎉',
             'is_first_blood': is_first_blood,
             'points': challenge.points,
+            'new_achievements': new_achievements,
         })
     else:
         return JsonResponse({

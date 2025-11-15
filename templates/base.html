@@ -1,3 +1,4 @@
+{% load static %}
 <!DOCTYPE html>
 <html lang="es" data-theme="dark">
 <head>
@@ -6,7 +7,7 @@
     <title>{% block title %}{{ ctf_name }}{% endblock %}</title>
     
     <!-- Tailwind CSS + DaisyUI -->
-    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
     
     <!-- Font Awesome -->
@@ -52,6 +53,9 @@
                     <li><a href="/" class="font-gaming">Dashboard</a></li>
                     <li><a href="/challenges/" class="font-gaming">Challenges</a></li>
                     <li><a href="/teams/" class="font-gaming">Teams</a></li>
+                    {% if user.is_authenticated %}
+                    <li><a href="{% url 'scoreboard:achievements' %}" class="font-gaming">🏅 Logros</a></li>
+                    {% endif %}
                 </ul>
             </div>
             <a href="/" class="btn btn-ghost text-xl font-gaming font-bold">{{ ctf_name }}</a>
@@ -61,6 +65,9 @@
                 <li><a href="/" class="font-gaming">Dashboard</a></li>
                 <li><a href="/challenges/" class="font-gaming">Challenges</a></li>
                 <li><a href="/teams/" class="font-gaming">Teams</a></li>
+                {% if user.is_authenticated %}
+                <li><a href="{% url 'scoreboard:achievements' %}" class="font-gaming">🏅 Logros</a></li>
+                {% endif %}
                 {% if user.is_authenticated and user.is_staff %}
                 <li><a href="/display/" class="font-gaming text-warning">🖥️ Pantalla Pública</a></li>
                 {% endif %}
@@ -79,6 +86,7 @@
                             <span class="font-gaming text-primary">{{ user.username }}</span>
                         </li>
                         <li><a href="{% url 'users:profile' %}" class="font-gaming">🧑‍💻 Mi Perfil</a></li>
+                        <li><a href="{% url 'scoreboard:achievements' %}" class="font-gaming">🏅 Mis Logros</a></li>
                         {% if user.teams.exists %}
                         <li><a href="/teams/{{ user.teams.first.id }}/" class="font-gaming">👥 Mi Equipo</a></li>
                         {% else %}
@@ -106,32 +114,198 @@
         {% block content %}{% endblock %}
     </main>
 
+    <!-- Modal para advertencias de tiempo -->
+    <dialog id="timeWarningModal" class="modal">
+        <div class="modal-box max-w-2xl">
+            <h3 id="modalTitle" class="font-gaming text-2xl font-bold mb-4"></h3>
+            <p id="modalMessage" class="text-lg mb-6"></p>
+            <div class="modal-action">
+                <button id="modalConfirmBtn" class="btn btn-primary font-gaming">Entendido</button>
+            </div>
+        </div>
+        <form method="dialog" class="modal-backdrop">
+            <button>close</button>
+        </form>
+    </dialog>
+
+    <!-- Modal para CTF finalizado -->
+    <dialog id="ctfEndedModal" class="modal">
+        <div class="modal-box max-w-2xl border-4 border-error">
+            <h3 class="font-gaming text-3xl font-bold mb-4 text-error">🏁 CTF FINALIZADO</h3>
+            <p id="ctfEndedMessage" class="text-lg mb-6"></p>
+            <p class="text-sm opacity-70 mb-6">La página se recargará automáticamente en <span id="countdown">5</span> segundos...</p>
+            <div class="modal-action">
+                <button id="ctfEndedConfirmBtn" class="btn btn-error font-gaming">Recargar Ahora</button>
+            </div>
+        </div>
+    </dialog>
+
+    <!-- Audio para notificaciones -->
+    <audio id="notificationSound" preload="auto">
+        <source src="{% static 'sounds/notification.mp3' %}" type="audio/mpeg">
+        <source src="{% static 'sounds/notification.ogg' %}" type="audio/ogg">
+    </audio>
+    <audio id="alertSound" preload="auto">
+        <source src="{% static 'sounds/alert.mp3' %}" type="audio/mpeg">
+        <source src="{% static 'sounds/alert.ogg' %}" type="audio/ogg">
+    </audio>
+
     <!-- WebSocket Script for Real-time Updates -->
     <script>
         const ws = new WebSocket('ws://' + window.location.host + '/ws/scoreboard/');
         
         ws.onmessage = function(e) {
             const data = JSON.parse(e.data);
-            showNotification(data.message, data.type || 'success');
             
-            // Reload page on flag solve to update scoreboard
-            if (data.type === 'flag_solved' || data.type === 'first_blood') {
+            // Solo manejar notificaciones de tiempo del CTF con modales
+            if (data.type === 'ctf_time_warning') {
+                showTimeWarning(data.message, data.minutes_left);
+            } else if (data.type === 'ctf_ended') {
+                showCTFEnded(data.message);
+            }
+            // Manejar anuncios personalizados
+            else if (data.type === 'custom_announcement') {
+                showCustomAnnouncement(data.title, data.message, data.notification_type);
+            }
+            // Manejar notificaciones del sistema (info/success/warning/error)
+            else if (data.type === 'notification') {
+                const notifType = data.notification_type || 'info';
+                showCustomAnnouncement('📢 Notificación del Sistema', data.message, notifType);
+            }
+            // Reload page on flag solve to update scoreboard (solo en páginas que no sean display)
+            else if ((data.type === 'flag_solved' || data.type === 'first_blood') && !window.location.pathname.includes('/display/')) {
                 setTimeout(() => location.reload(), 2000);
             }
         };
 
-        function showNotification(message, type = 'success') {
-            const alertClass = type === 'error' ? 'alert-error' : 
-                              type === 'first_blood' ? 'alert-warning' : 'alert-success';
-            
-            const notification = document.createElement('div');
-            notification.className = `alert ${alertClass}`;
-            notification.innerHTML = `<span class="font-gaming text-sm">${message}</span>`;
-            
-            document.getElementById('notifications').appendChild(notification);
-            
-            setTimeout(() => notification.remove(), 4000);
+        function playSound(soundId) {
+            try {
+                const sound = document.getElementById(soundId);
+                if (sound) {
+                    sound.currentTime = 0;
+                    sound.play().catch(err => console.log('No se pudo reproducir el sonido:', err));
+                }
+            } catch (err) {
+                console.log('Error al reproducir sonido:', err);
+            }
         }
+
+        function showTimeWarning(message, minutes_left) {
+            const modal = document.getElementById('timeWarningModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMessage = document.getElementById('modalMessage');
+            const modalBox = modal.querySelector('.modal-box');
+            
+            // Configurar título y mensaje según urgencia
+            if (minutes_left <= 5) {
+                modalTitle.textContent = '⚠️ ¡ADVERTENCIA CRÍTICA!';
+                modalTitle.className = 'font-gaming text-3xl font-bold mb-4 text-error';
+                modalBox.className = 'modal-box max-w-2xl border-4 border-error';
+                playSound('alertSound');
+            } else if (minutes_left <= 15) {
+                modalTitle.textContent = '⚠️ Advertencia de Tiempo';
+                modalTitle.className = 'font-gaming text-2xl font-bold mb-4 text-warning';
+                modalBox.className = 'modal-box max-w-2xl border-2 border-warning';
+                playSound('alertSound');
+            } else {
+                modalTitle.textContent = '⏰ Notificación de Tiempo';
+                modalTitle.className = 'font-gaming text-2xl font-bold mb-4 text-info';
+                modalBox.className = 'modal-box max-w-2xl border-2 border-info';
+                playSound('notificationSound');
+            }
+            
+            modalMessage.textContent = message;
+            modal.showModal();
+            
+            // Focus en el botón para que Enter lo cierre
+            document.getElementById('modalConfirmBtn').focus();
+        }
+
+        function showCTFEnded(message) {
+            const modal = document.getElementById('ctfEndedModal');
+            const ctfEndedMessage = document.getElementById('ctfEndedMessage');
+            const countdownSpan = document.getElementById('countdown');
+            
+            ctfEndedMessage.textContent = message;
+            modal.showModal();
+            
+            // Reproducir sonido de alerta
+            playSound('alertSound');
+            
+            // Countdown
+            let seconds = 5;
+            const countdownInterval = setInterval(() => {
+                seconds--;
+                countdownSpan.textContent = seconds;
+                if (seconds <= 0) {
+                    clearInterval(countdownInterval);
+                    location.reload();
+                }
+            }, 1000);
+            
+            // Permitir recargar inmediatamente
+            document.getElementById('ctfEndedConfirmBtn').onclick = () => {
+                clearInterval(countdownInterval);
+                location.reload();
+            };
+        }
+        
+        function showCustomAnnouncement(title, message, type) {
+            const modal = document.getElementById('timeWarningModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMessage = document.getElementById('modalMessage');
+            const modalBox = modal.querySelector('.modal-box');
+            const confirmBtn = document.getElementById('modalConfirmBtn');
+            
+            // Configurar estilo según tipo
+            const styles = {
+                'info': {
+                    titleClass: 'font-gaming text-2xl font-bold mb-4 text-info',
+                    boxClass: 'modal-box max-w-2xl border-4 border-info',
+                    sound: 'notificationSound'
+                },
+                'success': {
+                    titleClass: 'font-gaming text-2xl font-bold mb-4 text-success',
+                    boxClass: 'modal-box max-w-2xl border-4 border-success',
+                    sound: 'notificationSound'
+                },
+                'warning': {
+                    titleClass: 'font-gaming text-2xl font-bold mb-4 text-warning',
+                    boxClass: 'modal-box max-w-2xl border-4 border-warning',
+                    sound: 'alertSound'
+                },
+                'error': {
+                    titleClass: 'font-gaming text-2xl font-bold mb-4 text-error',
+                    boxClass: 'modal-box max-w-2xl border-4 border-error',
+                    sound: 'alertSound'
+                }
+            };
+            
+            const style = styles[type] || styles.info;
+            
+            modalTitle.textContent = title;
+            modalTitle.className = style.titleClass;
+            modalBox.className = style.boxClass;
+            modalMessage.textContent = message;
+            confirmBtn.className = 'btn btn-primary font-gaming';
+            confirmBtn.textContent = 'Entendido';
+            
+            playSound(style.sound);
+            modal.showModal();
+            confirmBtn.focus();
+        }
+        
+        // Cerrar modal de advertencia con Enter o botón
+        document.getElementById('modalConfirmBtn').addEventListener('click', () => {
+            document.getElementById('timeWarningModal').close();
+        });
+        
+        // Permitir cerrar con Escape
+        document.getElementById('timeWarningModal').addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') {
+                document.getElementById('timeWarningModal').close();
+            }
+        });
     </script>
 
     {% block extra_js %}{% endblock %}

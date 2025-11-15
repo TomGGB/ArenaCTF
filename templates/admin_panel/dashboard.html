@@ -110,7 +110,7 @@
                 <h2 class="card-title font-gaming text-2xl">Actividad Reciente</h2>
                 <div class="space-y-2 max-h-96 overflow-y-auto">
                     {% for sub in recent_submissions %}
-                    <div class="p-3 bg-base-200 rounded-lg {% if sub.is_correct %}border-l-4 border-success{% else %}opacity-60{% endif %}">
+                    <div class="p-3 bg-base-200 rounded-lg {% if sub.is_correct %}border-l-4 border-success{% else %}opacity-60{% endif %} cursor-pointer hover:bg-base-100 transition-colors" onclick="window.location.href='{% url 'admin_panel:challenge_edit' sub.challenge.id %}'">
                         <div class="flex items-center justify-between">
                             <div>
                                 <div class="font-gaming font-semibold" style="color: {{ sub.team.color }}">
@@ -147,7 +147,7 @@
                 <h2 class="card-title font-gaming text-2xl">Top Equipos</h2>
                 <div class="space-y-2">
                     {% for team in top_teams %}
-                    <div class="p-3 bg-base-200 rounded-lg">
+                    <div class="p-3 bg-base-200 rounded-lg cursor-pointer hover:bg-base-100 transition-colors" onclick="window.location.href='{% url 'admin_panel:team_detail' team.id %}'">
                         <div class="flex items-center justify-between">
                             <div class="flex items-center gap-3">
                                 <div class="text-2xl font-gaming">#{{ forloop.counter }}</div>
@@ -184,7 +184,7 @@
             <h2 class="card-title font-gaming text-2xl">Challenges por Categoría</h2>
             <div class="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-4">
                 {% for cat in challenges_by_category %}
-                <div class="text-center p-4 bg-base-200 rounded-lg">
+                <div class="text-center p-4 bg-base-200 rounded-lg cursor-pointer hover:bg-base-100 transition-colors" onclick="window.location.href='{% url 'admin_panel:challenges_list' %}?category={{ cat.id }}'">
                     <div class="text-3xl mb-2">{{ cat.icon }}</div>
                     <div class="font-gaming font-semibold">{{ cat.name }}</div>
                     <div class="text-2xl font-gaming text-success mt-2">

@@ -1,0 +1,823 @@
+{% load static %}
+<!DOCTYPE html>
+<html lang="es" data-theme="dark">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>CTF Scoreboard - Public Display</title>
+    
+    <!-- Tailwind CSS + DaisyUI -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdn.jsdelivr.net/npm/daisyui@4.4.19/dist/full.min.css" rel="stylesheet" type="text/css" />
+    
+    <!-- Chart.js -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/chartjs-adapter-date-fns@3.0.0/dist/chartjs-adapter-date-fns.bundle.min.js"></script>
+    
+    <!-- Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+    
+    <script>
+        tailwind.config = {
+            theme: {
+                extend: {
+                    fontFamily: {
+                        'gaming': ['Rajdhani', 'sans-serif'],
+                        'mono': ['Space Mono', 'monospace'],
+                    }
+                }
+            }
+        }
+    </script>
+
+    <style>
+        body {
+            font-family: 'Rajdhani', sans-serif;
+        }
+        
+        /* Animaciones */
+        .fade-in {
+            animation: fadeIn 0.5s ease-in;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .slide-in-right {
+            animation: slideInRight 0.6s ease-out;
+        }
+        
+        @keyframes slideInRight {
+            from { transform: translateX(100%); opacity: 0; }
+            to { transform: translateX(0); opacity: 1; }
+        }
+        
+        .pulse-glow {
+            animation: pulseGlow 0.8s ease-in-out;
+        }
+        
+        @keyframes pulseGlow {
+            0%, 100% { box-shadow: 0 0 0 rgba(0, 255, 65, 0); }
+            50% { box-shadow: 0 0 30px rgba(0, 255, 65, 0.6); }
+        }
+        
+        .rank-up {
+            animation: rankUp 0.8s ease-out;
+        }
+        
+        @keyframes rankUp {
+            0% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(-20px) scale(1.1); color: #00ff41; }
+            100% { transform: translateY(0) scale(1); }
+        }
+        
+        .rank-down {
+            animation: rankDown 0.8s ease-out;
+        }
+        
+        @keyframes rankDown {
+            0% { transform: translateY(0) scale(1); }
+            50% { transform: translateY(20px) scale(0.95); color: #ff4136; }
+            100% { transform: translateY(0) scale(1); }
+        }
+        
+        .first-blood-flash {
+            animation: firstBloodFlash 1s ease-in-out;
+        }
+        
+        @keyframes firstBloodFlash {
+            0%, 100% { background-color: transparent; }
+            50% { background-color: rgba(255, 0, 0, 0.2); }
+        }
+        
+        /* Overlay de notificaciones */
+        .notification-overlay {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            z-index: 9999;
+            padding: 3rem 4rem;
+            background: linear-gradient(135deg, rgba(0, 0, 0, 0.98), rgba(20, 20, 30, 0.98));
+            border: 4px solid;
+            border-radius: 1.5rem;
+            text-align: center;
+            animation: notificationPop 2s ease-in-out;
+            max-width: 90%;
+            box-shadow: 0 0 60px rgba(0, 255, 65, 0.3), 0 0 100px rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+        }
+        
+        .notification-icon {
+            font-size: 5rem;
+            margin-bottom: 1rem;
+            animation: iconBounce 0.6s ease-out;
+            filter: drop-shadow(0 0 20px currentColor);
+        }
+        
+        .notification-text {
+            font-size: 2.5rem;
+            font-weight: bold;
+            text-shadow: 0 0 20px currentColor, 0 4px 8px rgba(0, 0, 0, 0.5);
+            line-height: 1.3;
+        }
+        
+        .notification-team {
+            display: inline-block;
+            padding: 0.3rem 1rem;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 0.5rem;
+            margin: 0 0.5rem;
+        }
+        
+        @keyframes notificationPop {
+            0% { 
+                transform: translate(-50%, -50%) scale(0); 
+                opacity: 0; 
+            }
+            10% { 
+                transform: translate(-50%, -50%) scale(1.1); 
+                opacity: 1; 
+            }
+            20% {
+                transform: translate(-50%, -50%) scale(1);
+            }
+            90% { 
+                transform: translate(-50%, -50%) scale(1); 
+                opacity: 1; 
+            }
+            100% { 
+                transform: translate(-50%, -50%) scale(0.8); 
+                opacity: 0; 
+            }
+        }
+        
+        @keyframes iconBounce {
+            0%, 100% { transform: translateY(0) scale(1); }
+            25% { transform: translateY(-20px) scale(1.1); }
+            50% { transform: translateY(0) scale(0.95); }
+            75% { transform: translateY(-10px) scale(1.05); }
+        }
+    </style>
+</head>
+<body data-theme="dark" class="bg-base-100">
+    <!-- Overlay para habilitar audio -->
+    <div id="audioEnableOverlay" class="fixed inset-0 bg-black bg-opacity-90 z-[10000] flex items-center justify-center" style="display: none;">
+        <div class="card bg-base-300 border-4 border-success shadow-2xl max-w-md">
+            <div class="card-body text-center p-8">
+                <div class="text-6xl mb-4">🔊</div>
+                <h2 class="text-3xl font-gaming font-bold text-success mb-4">Activar Sonidos</h2>
+                <p class="text-lg mb-6 opacity-80">Haz clic para habilitar las notificaciones de audio en el display</p>
+                <button id="enableAudioBtn" class="btn btn-success btn-lg font-gaming text-xl">
+                    🎵 Activar Audio
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <div class="container mx-auto px-8 py-6">
+        <!-- Header -->
+        <div class="text-center mb-6">
+            <h1 class="text-5xl font-gaming font-bold text-success mb-2">CTF SCOREBOARD</h1>
+            <div class="flex items-center justify-center gap-4">
+                <p class="text-lg opacity-60">Clasificación en Tiempo Real</p>
+                <button id="audioStatusBtn" class="btn btn-sm btn-circle btn-ghost" title="Estado del audio">
+                    <span id="audioStatusIcon" class="text-xl">🔇</span>
+                </button>
+            </div>
+            <div class="text-sm opacity-40 mt-2" id="lastUpdate">Última actualización: --:--:--</div>
+        </div>
+
+        <!-- Score Timeline Chart -->
+        <div class="mb-6">
+            <div class="card bg-base-300 border border-base-content/10">
+                <div class="card-body p-6">
+                    <h2 class="text-3xl font-gaming font-bold mb-4 text-center">📊 Progreso de Equipos</h2>
+                    <div class="w-full h-80">
+                        <canvas id="scoreTimelineChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
+            <!-- Main Scoreboard -->
+            <div class="xl:col-span-2">
+                <div class="card bg-base-300 border border-base-content/10">
+                    <div class="card-body p-6">
+                        <h2 class="text-3xl font-gaming font-bold mb-4 text-center">Rankings</h2>
+                        
+                        <div class="overflow-x-auto">
+                            <table class="table table-lg">
+                                <thead>
+                                    <tr class="text-lg">
+                                        <th class="font-gaming">Pos</th>
+                                        <th class="font-gaming">Equipo</th>
+                                        <th class="font-gaming text-center">Puntos</th>
+                                        <th class="font-gaming text-center">Flags</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="rankingsTable">
+                                    {% for team in teams %}
+                                    {% with solved_count=team.submissions.filter|dictsort:"is_correct"|length %}
+                                    <tr class="hover fade-in">
+                                        <td>
+                                            <div class="flex items-center gap-3">
+                                                <div class="font-gaming text-xl {% if forloop.counter <= 3 %}text-warning{% endif %}">#{{ forloop.counter }}</div>
+                                                {% if forloop.counter == 1 %}<div class="text-2xl">🏆</div>{% endif %}
+                                                {% if forloop.counter == 2 %}<div class="text-2xl">🥈</div>{% endif %}
+                                                {% if forloop.counter == 3 %}<div class="text-2xl">🥉</div>{% endif %}
+                                            </div>
+                                        </td>
+                                        <td>
+                                            <div class="font-gaming font-bold text-lg" style="color: {{ team.color }}">{{ team.name }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="font-mono font-bold text-xl text-success">{{ team.total_score }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="badge badge-info badge-sm font-mono">{{ team.members.count }} miembro{{ team.members.count|pluralize }}</div>
+                                        </td>
+                                        <td>
+                                            <div class="flex gap-1">
+                                                {% with fb_count=team.first_bloods.count %}
+                                                    {% if fb_count > 0 %}
+                                                        {% for i in "x"|rjust:fb_count %}🩸{% endfor %}
+                                                    {% else %}
+                                                        -
+                                                    {% endif %}
+                                                {% endwith %}
+                                            </div>
+                                        </td>
+                                    </tr>
+                                    {% endwith %}
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Sidebar -->
+            <div class="space-y-6">
+                <!-- Stats -->
+                <div class="stats stats-vertical shadow border border-base-content/10 w-full">
+                    <div class="stat">
+                        <div class="stat-title text-xs">Total Equipos</div>
+                        <div class="stat-value text-3xl font-gaming text-success" id="totalTeams">{{ teams|length }}</div>
+                    </div>
+                    
+                    <div class="stat">
+                        <div class="stat-title text-xs">Flags Capturadas</div>
+                        <div class="stat-value text-3xl font-gaming text-warning" id="totalFlags">{{ recent_submissions|length }}</div>
+                    </div>
+                    
+                    <div class="stat">
+                        <div class="stat-title text-xs">First Bloods</div>
+                        <div class="stat-value text-3xl font-gaming text-error" id="totalFirstBloods">{{ first_bloods|length }}</div>
+                    </div>
+                </div>
+
+                <!-- First Bloods -->
+                <div class="card bg-base-300 border border-base-content/10">
+                    <div class="card-body p-4">
+                        <h3 class="text-xl font-gaming font-bold mb-3">🩸 First Bloods</h3>
+                        <div id="firstBloodsContainer" class="space-y-2 max-h-64 overflow-y-auto">
+                            {% for fb in first_bloods|slice:":5" %}
+                            <div class="p-2 bg-base-200 rounded-lg border border-error/20">
+                                <div class="font-gaming font-semibold text-sm">{{ fb.challenge.title }}</div>
+                                <div class="text-xs opacity-60 mt-1">
+                                    <span style="color: {{ fb.team.color }}">{{ fb.team.name }}</span>
+                                    <span class="badge badge-error badge-xs ml-2">+{{ fb.bonus_points }}</span>
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="text-sm opacity-60">Sin first bloods aún</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="card bg-base-300 border border-base-content/10">
+                    <div class="card-body p-4">
+                        <h3 class="text-xl font-gaming font-bold mb-3">⚡ Actividad Reciente</h3>
+                        <div id="recentActivityContainer" class="space-y-2 max-h-64 overflow-y-auto">
+                            {% for sub in recent_submissions|slice:":5" %}
+                            <div class="p-2 bg-base-200 rounded-lg text-xs">
+                                <div class="font-gaming font-semibold" style="color: {{ sub.team.color }}">
+                                    {{ sub.team.name }}
+                                </div>
+                                <div class="text-xs opacity-80">
+                                    {% if sub.submitted_by %}⚔️ {{ sub.submitted_by.username }}{% endif %}
+                                </div>
+                                <div class="opacity-60 mt-1">
+                                    {{ sub.challenge.title }} • {{ sub.submitted_at|timesince }} ago
+                                </div>
+                            </div>
+                            {% empty %}
+                            <div class="text-sm opacity-60">Sin actividad reciente</div>
+                            {% endfor %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Auto-refresh Script -->
+    <script>
+        let scoreChart = null;
+        let currentRankings = {};
+        
+        // Sistema de sonidos con archivos de audio
+        const sounds = {};
+        const soundFiles = {
+            flag_solved: '{% static "sounds/flag_solved.mp3" %}',
+            first_blood: '{% static "sounds/first_blood.mp3" %}',
+            rank_up: '{% static "sounds/rank_up.mp3" %}',
+            rank_down: '{% static "sounds/rank_down.mp3" %}'
+        };
+        
+        let audioEnabled = false;
+        let audioInitialized = false;
+        
+        // Función para inicializar audio
+        function initializeAudio() {
+            if (audioInitialized) return;
+            
+            console.log('Inicializando sistema de audio...');
+            
+            // Crear y precargar todos los sonidos
+            Object.entries(soundFiles).forEach(([key, url]) => {
+                sounds[key] = new Audio(url);
+                sounds[key].preload = 'auto';
+                sounds[key].volume = 0.7;
+                sounds[key].load();
+                
+                // Reproducir silenciosamente para desbloquear
+                sounds[key].volume = 0;
+                sounds[key].play().then(() => {
+                    sounds[key].pause();
+                    sounds[key].currentTime = 0;
+                    sounds[key].volume = 0.7;
+                    console.log(`Sonido ${key} precargado correctamente`);
+                }).catch(err => {
+                    console.log(`Error precargando ${key}:`, err);
+                });
+            });
+            
+            audioInitialized = true;
+            audioEnabled = true;
+            updateAudioStatus();
+        }
+        
+        // Actualizar icono de estado de audio
+        function updateAudioStatus() {
+            const icon = document.getElementById('audioStatusIcon');
+            if (icon) {
+                icon.textContent = audioEnabled ? '🔊' : '🔇';
+            }
+        }
+        
+        // Cola de sonidos
+        let soundQueue = [];
+        let isPlayingSound = false;
+        
+        // Función para reproducir sonido con cola
+        function playSound(type) {
+            if (!audioEnabled || !sounds[type]) {
+                console.log(`Audio no disponible: enabled=${audioEnabled}, sound=${!!sounds[type]}`);
+                return;
+            }
+            
+            soundQueue.push(type);
+            processSoundQueue();
+        }
+        
+        // Procesar cola de sonidos
+        function processSoundQueue() {
+            if (isPlayingSound || soundQueue.length === 0) return;
+            
+            isPlayingSound = true;
+            const soundType = soundQueue.shift();
+            const sound = sounds[soundType];
+            
+            sound.currentTime = 0;
+            sound.play()
+                .then(() => {
+                    // Esperar a que termine el sonido antes de reproducir el siguiente
+                    sound.onended = () => {
+                        isPlayingSound = false;
+                        processSoundQueue();
+                    };
+                })
+                .catch(err => {
+                    console.log('Error reproduciendo sonido:', err);
+                    isPlayingSound = false;
+                    processSoundQueue();
+                });
+        }
+        
+        // Cola de notificaciones
+        let notificationQueue = [];
+        let isShowingNotification = false;
+        
+        // Función para agregar notificación a la cola
+        function queueNotification(message, color, icon, soundType = null) {
+            notificationQueue.push({ message, color, icon, soundType });
+            processNotificationQueue();
+        }
+        
+        // Procesar cola de notificaciones
+        function processNotificationQueue() {
+            if (isShowingNotification || notificationQueue.length === 0) {
+                return;
+            }
+            
+            isShowingNotification = true;
+            const { message, color, icon, soundType } = notificationQueue.shift();
+            
+            // Reproducir sonido cuando se muestra la notificación
+            if (soundType) {
+                playSound(soundType);
+            }
+            
+            const overlay = document.createElement('div');
+            overlay.className = 'notification-overlay';
+            overlay.style.borderColor = color;
+            
+            // Extraer nombre del equipo si está en el mensaje
+            const teamMatch = message.match(/^(.+?)\s+(resolvió|consiguió|subió|bajó)/);
+            let htmlContent = '';
+            
+            if (teamMatch) {
+                const teamName = teamMatch[1];
+                const restMessage = message.substring(teamName.length);
+                htmlContent = `
+                    <div class="notification-icon" style="color: ${color}">${icon}</div>
+                    <div class="notification-text">
+                        <span class="notification-team" style="color: ${color}">${teamName}</span>${restMessage}
+                    </div>
+                `;
+            } else {
+                htmlContent = `
+                    <div class="notification-icon" style="color: ${color}">${icon}</div>
+                    <div class="notification-text" style="color: ${color}">${message}</div>
+                `;
+            }
+            
+            overlay.innerHTML = htmlContent;
+            document.body.appendChild(overlay);
+            
+            setTimeout(() => {
+                overlay.remove();
+                isShowingNotification = false;
+                processNotificationQueue();
+            }, 4000);
+        }
+        
+        // WebSocket para actualizaciones en tiempo real
+        const ws = new WebSocket('ws://' + window.location.host + '/ws/scoreboard/');
+        
+        ws.onmessage = function(e) {
+            const data = JSON.parse(e.data);
+            
+            console.log('WebSocket message received:', data.type, data.event_type);
+            
+            if (data.type === 'display_data_update') {
+                // Si hay información de evento, mostrar notificación
+                if (data.event_type === 'flag_solved') {
+                    const eventData = data.event_data;
+                    
+                    // Si es first blood, mostrar SOLO notificación de first blood
+                    if (eventData.is_first_blood) {
+                        queueNotification(
+                            `${eventData.team} consiguió FIRST BLOOD en ${eventData.challenge}!`,
+                            eventData.color,
+                            '🩸',
+                            'first_blood'
+                        );
+                    } else {
+                        // Si NO es first blood, mostrar notificación de flag resuelta
+                        queueNotification(
+                            `${eventData.team} resolvió ${eventData.challenge}!`,
+                            eventData.color,
+                            '🎯',
+                            'flag_solved'
+                        );
+                    }
+                    
+                    // Mostrar notificaciones de logros nuevos
+                    if (eventData.new_achievements && eventData.new_achievements.length > 0) {
+                        eventData.new_achievements.forEach(achievement => {
+                            const achievementText = achievement.type === 'individual' 
+                                ? `${achievement.user} (${achievement.team}) desbloqueó: ${achievement.name}!`
+                                : `${achievement.team} desbloqueó: ${achievement.name}!`;
+                            
+                            queueNotification(
+                                achievementText,
+                                achievement.color,
+                                achievement.icon,
+                                'rank_up'
+                            );
+                        });
+                    }
+                }
+                
+                // Actualizar todos los datos del display
+                updateRankings(data.teams);
+                updateFirstBloods(data.first_bloods);
+                updateRecentActivity(data.recent_submissions);
+                updateTimelineChart(data.timeline);
+                updateTimestamp();
+            }
+        };
+
+        // Función para actualizar datos via AJAX
+        async function fetchDisplayData() {
+            try {
+                const response = await fetch('/api/display/');
+                const data = await response.json();
+                
+                // Actualizar rankings
+                updateRankings(data.teams);
+                
+                // Actualizar first bloods
+                updateFirstBloods(data.first_bloods);
+                
+                // Actualizar actividad reciente
+                updateRecentActivity(data.recent_submissions);
+                
+                // Actualizar gráfico de timeline
+                updateTimelineChart(data.timeline);
+                
+                updateTimestamp();
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        }
+        
+        function updateRankings(teams) {
+            const tbody = document.getElementById('rankingsTable');
+            
+            // Detectar cambios de ranking ANTES de actualizar la tabla
+            const rankChanges = [];
+            teams.forEach((team, idx) => {
+                const oldRank = currentRankings[team.name];
+                const newRank = idx + 1;
+                
+                if (oldRank && oldRank !== newRank) {
+                    // El equipo cambió de posición
+                    rankChanges.push({
+                        name: team.name,
+                        color: team.color,
+                        oldRank: oldRank,
+                        newRank: newRank,
+                        isRankUp: newRank < oldRank
+                    });
+                }
+                
+                currentRankings[team.name] = newRank;
+            });
+            
+            // Actualizar tabla
+            tbody.innerHTML = teams.map((team, idx) => {
+                const hasScoreChange = team.score > (team.lastScore || 0);
+                team.lastScore = team.score;
+                
+                return `
+                <tr class="hover fade-in ${hasScoreChange ? 'pulse-glow' : ''}" data-team="${team.name}">
+                    <td>
+                        <div class="flex items-center gap-3">
+                            <div class="font-gaming text-xl ${idx < 3 ? 'text-warning' : ''}">#${team.rank}</div>
+                            ${idx === 0 ? '<div class="text-2xl">🏆</div>' : ''}
+                            ${idx === 1 ? '<div class="text-2xl">🥈</div>' : ''}
+                            ${idx === 2 ? '<div class="text-2xl">🥉</div>' : ''}
+                        </div>
+                    </td>
+                    <td>
+                        <div class="font-gaming font-bold text-lg" style="color: ${team.color}">${team.name}</div>
+                    </td>
+                    <td>
+                        <div class="font-mono font-bold text-xl text-success">${team.score}</div>
+                    </td>
+                    <td>
+                        <div class="badge badge-info badge-sm font-mono">${team.solved} resueltos</div>
+                    </td>
+                    <td>
+                        <div class="flex gap-1">
+                            ${team.first_bloods > 0 ? '🩸'.repeat(team.first_bloods) : '-'}
+                        </div>
+                    </td>
+                </tr>
+            `}).join('');
+            
+            // Aplicar animaciones y notificaciones de cambios de ranking
+            rankChanges.forEach(change => {
+                setTimeout(() => {
+                    const row = tbody.querySelector(`tr[data-team="${change.name}"]`);
+                    if (row) {
+                        const rankAnimation = change.isRankUp ? 'rank-up' : 'rank-down';
+                        row.classList.add(rankAnimation);
+                        setTimeout(() => row.classList.remove(rankAnimation), 800);
+                    }
+                    
+                    // Mostrar notificación de cambio de ranking
+                    queueNotification(
+                        `${change.name} ${change.isRankUp ? 'subió' : 'bajó'} al puesto #${change.newRank}!`,
+                        change.color,
+                        change.isRankUp ? '📈' : '📉',
+                        change.isRankUp ? 'rank_up' : 'rank_down'
+                    );
+                }, 100);
+            });
+        }
+        
+        function updateFirstBloods(firstBloods) {
+            const container = document.getElementById('firstBloodsContainer');
+            container.innerHTML = firstBloods.length > 0 ? firstBloods.map((fb, idx) => `
+                <div class="p-3 bg-base-200 rounded-lg border-l-4 slide-in-right first-blood-flash" 
+                     style="border-color: ${fb.team_color}; animation-delay: ${idx * 0.1}s">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="font-gaming font-semibold" style="color: ${fb.team_color}">${fb.team_name}</div>
+                            <div class="text-xs opacity-80">⚔️ ${fb.user_name}</div>
+                            <div class="text-sm opacity-60 mt-1">${fb.challenge} • ${fb.time}</div>
+                        </div>
+                        <div class="text-2xl">🩸</div>
+                    </div>
+                </div>
+            `).join('') : '<div class="text-sm opacity-60 text-center py-4">Sin first bloods aún</div>';
+        }
+        
+        function updateRecentActivity(submissions) {
+            const container = document.getElementById('recentActivityContainer');
+            container.innerHTML = submissions.length > 0 ? submissions.map((sub, idx) => `
+                <div class="p-3 bg-base-200 rounded-lg slide-in-right" 
+                     style="animation-delay: ${idx * 0.08}s">
+                    <div class="flex items-center justify-between">
+                        <div>
+                            <div class="font-gaming font-semibold" style="color: ${sub.team_color}">${sub.team_name}</div>
+                            <div class="text-xs opacity-80">⚔️ ${sub.user_name}</div>
+                            <div class="text-sm opacity-60 mt-1">${sub.challenge} (+${sub.points} pts)</div>
+                        </div>
+                        <div class="text-xs opacity-40">${sub.time}</div>
+                    </div>
+                </div>
+            `).join('') : '<div class="text-sm opacity-60">Sin actividad reciente</div>';
+        }
+
+        // Función para crear/actualizar el gráfico de timeline
+        function updateTimelineChart(timelineData) {
+            const ctx = document.getElementById('scoreTimelineChart');
+            
+            // Preparar datasets para cada equipo
+            const datasets = Object.entries(timelineData).map(([teamName, teamData]) => ({
+                label: teamName,
+                data: teamData.data.map(point => ({ 
+                    x: new Date(point.time).getTime(), 
+                    y: point.score,
+                    label: point.label
+                })),
+                borderColor: teamData.color,
+                backgroundColor: teamData.color + '33',
+                borderWidth: 3,
+                tension: 0,
+                fill: false,
+                pointRadius: 6,
+                pointHoverRadius: 10,
+                stepped: false,
+            }));
+            
+            // Si el gráfico ya existe, actualizarlo
+            if (scoreChart) {
+                scoreChart.data.datasets = datasets;
+                scoreChart.update('none');
+            } else {
+                // Crear nuevo gráfico
+                scoreChart = new Chart(ctx, {
+                    type: 'line',
+                    data: { datasets },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            x: {
+                                type: 'time',
+                                time: {
+                                    displayFormats: {
+                                        minute: 'dd/MM HH:mm',
+                                        hour: 'dd/MM HH:mm',
+                                        day: 'dd/MM'
+                                    },
+                                    tooltipFormat: 'dd/MM HH:mm'
+                                },
+                                title: {
+                                    display: true,
+                                    text: 'Tiempo',
+                                    color: '#a6adba',
+                                    font: { size: 14, family: 'Rajdhani' }
+                                },
+                                ticks: { 
+                                    color: '#a6adba', 
+                                    font: { family: 'Space Mono', size: 10 },
+                                    maxRotation: 45,
+                                    minRotation: 45,
+                                    source: 'data',
+                                    autoSkip: false
+                                },
+                                grid: { color: '#2a2e37' }
+                            },
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Puntos',
+                                    color: '#a6adba',
+                                    font: { size: 14, family: 'Rajdhani' }
+                                },
+                                ticks: { color: '#a6adba', font: { family: 'Space Mono' } },
+                                grid: { color: '#2a2e37' }
+                            }
+                        },
+                        plugins: {
+                            legend: {
+                                display: true,
+                                position: 'top',
+                                labels: {
+                                    color: '#a6adba',
+                                    font: { size: 14, family: 'Rajdhani', weight: 'bold' },
+                                    padding: 15,
+                                    usePointStyle: true,
+                                }
+                            },
+                            tooltip: {
+                                backgroundColor: '#1d232a',
+                                titleColor: '#00ff41',
+                                bodyColor: '#a6adba',
+                                borderColor: '#00ff41',
+                                borderWidth: 1,
+                                titleFont: { family: 'Rajdhani', size: 14, weight: 'bold' },
+                                bodyFont: { family: 'Space Mono', size: 12 },
+                                padding: 12,
+                            }
+                        },
+                        interaction: {
+                            mode: 'index',
+                            intersect: false,
+                        }
+                    }
+                });
+            }
+        }
+
+        // Actualizar timestamp
+        function updateTimestamp() {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString('es-ES');
+            document.getElementById('lastUpdate').textContent = `Última actualización: ${timeString}`;
+        }
+        
+        // Detectar si hay archivos de sonido y mostrar overlay
+        let hasAttemptedAudio = false;
+        
+        // Intentar inicializar audio automáticamente al hacer click en cualquier parte
+        document.addEventListener('click', function enableAudioOnClick() {
+            if (!hasAttemptedAudio) {
+                hasAttemptedAudio = true;
+                // Mostrar overlay solo si no se ha activado el audio
+                if (!audioEnabled) {
+                    document.getElementById('audioEnableOverlay').style.display = 'flex';
+                }
+            }
+        }, { once: false });
+        
+        // Botón para habilitar audio manualmente
+        document.getElementById('enableAudioBtn').addEventListener('click', function() {
+            initializeAudio();
+            document.getElementById('audioEnableOverlay').style.display = 'none';
+        });
+        
+        // Botón de estado de audio (toggle)
+        document.getElementById('audioStatusBtn').addEventListener('click', function() {
+            if (!audioInitialized) {
+                document.getElementById('audioEnableOverlay').style.display = 'flex';
+            } else {
+                audioEnabled = !audioEnabled;
+                updateAudioStatus();
+            }
+        });
+        
+        // Cargar datos iniciales
+        fetchDisplayData();
+        
+        // Actualizar timestamp cada segundo
+        updateTimestamp();
+        setInterval(updateTimestamp, 1000);
+    </script>
+</body>
+</html>

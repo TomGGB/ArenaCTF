@@ -25,6 +25,21 @@
         <p class="text-sm opacity-60">Resuelve los desafíos y gana puntos</p>
     </div>
 
+    <!-- CTF Ended Alert -->
+    {% if ctf_ended %}
+    <div class="alert alert-error shadow-lg mb-6">
+        <div class="flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-8 w-8" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+                <h3 class="font-gaming text-xl font-bold">🏁 El CTF ha finalizado</h3>
+                <div class="text-sm">Ya no se aceptan nuevas submissions. Los challenges están en modo solo lectura.</div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Categories -->
     <div class="space-y-8">
         {% for category in categories %}
@@ -115,6 +130,19 @@
     
     function submitFlag(event, challengeId) {
         if (event) event.preventDefault();
+        
+        {% if ctf_ended %}
+        // CTF ha finalizado, no permitir submissions
+        const resultDiv = document.getElementById('flagResult');
+        if (resultDiv) {
+            resultDiv.innerHTML = `
+                <div class="alert alert-error">
+                    <span class="font-gaming">⏰ El CTF ha finalizado. Ya no se aceptan submissions.</span>
+                </div>
+            `;
+        }
+        return;
+        {% endif %}
         
         const form = document.getElementById(`flagForm-${challengeId}`);
         const flagInput = document.getElementById(`flagInput-${challengeId}`);

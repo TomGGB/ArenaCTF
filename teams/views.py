@@ -3,6 +3,7 @@ from django.contrib import messages
 from django.db.models import Count
 from .models import Team
 from challenges.models import Challenge, Submission, FirstBlood
+from scoreboard.models import Achievement
 
 def team_register(request):
     """Vista para registro de equipos"""
@@ -22,9 +23,30 @@ def team_register(request):
     return render(request, 'teams/register.html')
 
 def team_list(request):
-    """Vista para listar equipos"""
-    teams = Team.objects.all()
+    """Vista principal de equipos - redirige al equipo del usuario"""
+    # Si el usuario tiene equipo, redirigir a su equipo
+    if request.user.is_authenticated:
+        user_team = request.user.teams.first()
+        if user_team:
+            return redirect('teams:team_detail', team_id=user_team.id)
+    
+    # Si no tiene equipo, mostrar lista de equipos
+    teams = Team.objects.all().order_by('-total_score')
     return render(request, 'teams/list.html', {'teams': teams})
+
+def all_teams_list(request):
+    """Vista para ver todos los equipos"""
+    teams = Team.objects.all().order_by('-total_score')
+    
+    # Obtener el equipo del usuario si lo tiene
+    user_team = None
+    if request.user.is_authenticated:
+        user_team = request.user.teams.first()
+    
+    return render(request, 'teams/all_teams.html', {
+        'teams': teams,
+        'user_team': user_team
+    })
 
 def team_detail(request, team_id):
     """Vista para ver los detalles de un equipo"""
@@ -68,6 +90,16 @@ def team_detail(request, team_id):
         member_first_bloods = first_bloods.filter(achieved_by=member)
         member_fb_points = sum(fb.bonus_points for fb in member_first_bloods)
         
+        # Logros individuales del miembro
+        member_achievements = Achievement.objects.filter(
+            user=member,
+            category='individual'
+        ).order_by('-earned_at')
+        
+        # Añadir información del logro
+        for achievement in member_achievements:
+            achievement.info = achievement.get_info()
+        
         member_stats.append({
             'user': member,
             'submissions_count': member_submissions.count(),
@@ -75,6 +107,7 @@ def team_detail(request, team_id):
             'first_bloods_count': member_first_bloods.count(),
             'first_bloods_points': member_fb_points,
             'total_points': member_points + member_fb_points,
+            'achievements': member_achievements,
         })
     
     # Ordenar miembros por puntos totales
@@ -95,6 +128,22 @@ def team_detail(request, team_id):
             'solved': solved
         })
     
+    # Logros del equipo
+    team_achievements = Achievement.objects.filter(
+        team=team,
+        category='team'
+    ).order_by('-earned_at')
+    
+    # Añadir información del logro a cada objeto
+    for achievement in team_achievements:
+        achievement.info = achievement.get_info()
+    
+    # Verificar si el usuario puede ver el código de invitación
+    can_view_invite_code = (
+        request.user.is_authenticated and 
+        (request.user in team.members.all() or request.user.is_staff or request.user.is_superuser)
+    )
+    
     context = {
         'team': team,
         'solved_challenges': solved_challenges,
@@ -108,6 +157,8 @@ def team_detail(request, team_id):
         'rank': rank,
         'category_stats': category_stats,
         'member_stats': member_stats,
+        'team_achievements': team_achievements,
+        'can_view_invite_code': can_view_invite_code,
     }
     
     return render(request, 'teams/detail.html', context)
@@ -132,7 +183,7 @@ def team_join(request):
             # Agregar al usuario al equipo
             team.members.add(request.user)
             messages.success(request, f'¡Te has unido exitosamente al equipo "{team.name}"!')
-            return redirect('teams:detail', team_id=team.id)
+            return redirect('teams:team_detail', team_id=team.id)
             
         except Team.DoesNotExist:
             messages.error(request, 'Código de invitación inválido.')

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test WebSocket</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        #log {
+            border: 1px solid #ccc;
+            height: 400px;
+            overflow-y: scroll;
+            padding: 10px;
+            background: #f5f5f5;
+            font-family: monospace;
+            font-size: 12px;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            background: white;
+            border-left: 3px solid #007bff;
+        }
+        .log-entry.error {
+            border-left-color: #dc3545;
+        }
+        .log-entry.success {
+            border-left-color: #28a745;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px 5px;
+            cursor: pointer;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test de WebSocket - CTF Time Notifications</h1>
+    
+    <div>
+        <button onclick="connectWebSocket()">Conectar WebSocket</button>
+        <button onclick="disconnectWebSocket()">Desconectar</button>
+        <button onclick="clearLog()">Limpiar Log</button>
+    </div>
+    
+    <h2>Log de Eventos:</h2>
+    <div id="log"></div>
+
+    <script>
+        let ws = null;
+
+        function addLog(message, type = 'info') {
+            const log = document.getElementById('log');
+            const entry = document.createElement('div');
+            entry.className = `log-entry ${type}`;
+            const time = new Date().toLocaleTimeString();
+            entry.innerHTML = `<strong>[${time}]</strong> ${message}`;
+            log.appendChild(entry);
+            log.scrollTop = log.scrollHeight;
+        }
+
+        function connectWebSocket() {
+            if (ws && ws.readyState === WebSocket.OPEN) {
+                addLog('Ya hay una conexión WebSocket activa', 'error');
+                return;
+            }
+
+            const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+            const wsUrl = `${protocol}//${window.location.host}/ws/scoreboard/`;
+            
+            addLog(`Conectando a: ${wsUrl}`, 'info');
+            
+            ws = new WebSocket(wsUrl);
+            
+            ws.onopen = function(e) {
+                addLog('✅ Conexión WebSocket establecida exitosamente', 'success');
+            };
+            
+            ws.onmessage = function(e) {
+                addLog(`📩 Mensaje recibido: ${e.data}`, 'success');
+                
+                try {
+                    const data = JSON.parse(e.data);
+                    addLog(`📦 Datos parseados: ${JSON.stringify(data, null, 2)}`, 'info');
+                    
+                    if (data.type === 'ctf_time_warning') {
+                        addLog(`⏰ ADVERTENCIA DE TIEMPO: ${data.message} (${data.minutes_left} minutos)`, 'success');
+                        alert(`⏰ ${data.message}`);
+                    } else if (data.type === 'ctf_ended') {
+                        addLog(`🏁 CTF FINALIZADO: ${data.message}`, 'success');
+                        alert(`🏁 ${data.message}`);
+                    }
+                } catch (err) {
+                    addLog(`❌ Error al parsear mensaje: ${err.message}`, 'error');
+                }
+            };
+            
+            ws.onerror = function(error) {
+                addLog(`❌ Error en WebSocket: ${JSON.stringify(error)}`, 'error');
+            };
+            
+            ws.onclose = function(e) {
+                addLog(`⚠️ Conexión cerrada. Código: ${e.code}, Razón: ${e.reason || 'Sin razón'}`, 'error');
+            };
+        }
+
+        function disconnectWebSocket() {
+            if (ws) {
+                ws.close();
+                addLog('Desconectado manualmente', 'info');
+            } else {
+                addLog('No hay conexión activa', 'error');
+            }
+        }
+
+        function clearLog() {
+            document.getElementById('log').innerHTML = '';
+        }
+
+        // Auto-conectar al cargar la página
+        window.onload = function() {
+            addLog('Página cargada', 'info');
+            connectWebSocket();
+        };
+    </script>
+</body>
+</html>

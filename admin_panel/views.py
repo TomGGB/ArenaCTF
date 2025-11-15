@@ -4,6 +4,7 @@ from django.contrib import messages
 from django.contrib.auth import get_user_model
 from django.db.models import Count, Q
 from django.utils import timezone
+from django.http import JsonResponse
 from challenges.models import Challenge, Category, Submission, FirstBlood
 from teams.models import Team
 from scoreboard.models import CTFConfig
@@ -67,13 +68,43 @@ def dashboard(request):
 
 @user_passes_test(is_admin)
 def challenges_list(request):
-    """Lista de todos los challenges"""
-    challenges = Challenge.objects.select_related('category').annotate(
-        solve_count=Count('submissions', filter=Q(submissions__is_correct=True))
-    ).order_by('-created_at')
+    """Lista de todos los challenges agrupados por categoría con filtros"""
+    from collections import OrderedDict
+    from django.db.models import Sum
+    
+    # Obtener todas las categorías
+    categories = Category.objects.all().order_by('name')
+    
+    # Agrupar challenges por categoría
+    challenges_by_category = OrderedDict()
+    
+    for category in categories:
+        challenges = Challenge.objects.filter(category=category).annotate(
+            solve_count=Count('submissions', filter=Q(submissions__is_correct=True))
+        ).order_by('points')
+        
+        # Agregar información adicional a cada challenge
+        for challenge in challenges:
+            challenge.has_first_blood = FirstBlood.objects.filter(challenge=challenge).exists()
+        
+        if challenges.exists():
+            challenges_by_category[category] = list(challenges)
+    
+    # Estadísticas generales
+    all_challenges = Challenge.objects.all()
+    total_challenges = all_challenges.count()
+    active_challenges = all_challenges.filter(is_active=True).count()
+    total_points = all_challenges.aggregate(total=Sum('points'))['total'] or 0
+    total_categories = categories.count()
     
     context = {
-        'challenges': challenges,
+        'challenges_by_category': challenges_by_category,
+        'categories': categories,
+        'all_challenges': all_challenges,
+        'total_challenges': total_challenges,
+        'active_challenges': active_challenges,
+        'total_points': total_points,
+        'total_categories': total_categories,
     }
     return render(request, 'admin_panel/challenges/list.html', context)
 
@@ -172,10 +203,22 @@ def challenge_delete(request, challenge_id):
 
 @user_passes_test(is_admin)
 def categories_list(request):
-    """Lista de categorías"""
-    categories = Category.objects.annotate(
-        challenge_count=Count('challenges')
-    ).order_by('name')
+    """Lista de categorías con estadísticas detalladas"""
+    from django.db.models import Sum
+    
+    categories = Category.objects.all().order_by('name')
+    
+    # Calcular estadísticas manualmente para cada categoría
+    for category in categories:
+        challenges = category.challenges.all()
+        category.challenge_count = challenges.count()
+        category.active_count = challenges.filter(is_active=True).count()
+        category.total_points = challenges.aggregate(total=Sum('points'))['total'] or 0
+        category.solve_count = Submission.objects.filter(
+            challenge__category=category,
+            is_correct=True
+        ).count()
+        category.fb_count = FirstBlood.objects.filter(challenge__category=category).count()
     
     context = {'categories': categories}
     return render(request, 'admin_panel/categories/list.html', context)
@@ -540,20 +583,29 @@ def ctf_config(request):
     # Tiempos
     if is_active and config.end_time:
         time_remaining = config.end_time - now
-        time_remaining = f"{time_remaining.days} días, {time_remaining.seconds // 3600} horas"
+        days = time_remaining.days
+        hours = time_remaining.seconds // 3600
+        minutes = (time_remaining.seconds % 3600) // 60
+        time_remaining = f"{days} días, {hours} horas, {minutes} minutos"
     else:
         time_remaining = None
     
     if is_upcoming and config.start_time:
         time_until_start = config.start_time - now
-        time_until_start = f"{time_until_start.days} días, {time_until_start.seconds // 3600} horas"
+        days = time_until_start.days
+        hours = time_until_start.seconds // 3600
+        minutes = (time_until_start.seconds % 3600) // 60
+        time_until_start = f"{days} días, {hours} horas, {minutes} minutos"
     else:
         time_until_start = None
     
     # Duración
     if config.start_time and config.end_time:
         duration = config.end_time - config.start_time
-        duration = f"{duration.days} días, {duration.seconds // 3600} horas"
+        days = duration.days
+        hours = duration.seconds // 3600
+        minutes = (duration.seconds % 3600) // 60
+        duration = f"{days} días, {hours} horas, {minutes} minutos"
     else:
         duration = "No configurado"
     
@@ -782,3 +834,59 @@ def team_create(request):
             messages.error(request, f'Error al crear equipo: {str(e)}')
     
     return render(request, 'admin_panel/teams/create.html')
+
+@user_passes_test(is_admin)
+def test_websocket(request):
+    """Página de prueba para WebSocket con todos los eventos"""
+    return render(request, 'admin_panel/test_websocket.html')
+
+@user_passes_test(is_admin)
+def broadcast_test_event(request):
+    """Transmitir evento de prueba via WebSocket"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    
+    import json
+    from channels.layers import get_channel_layer
+    from asgiref.sync import async_to_sync
+    
+    try:
+        data = json.loads(request.body)
+        event_type = data.get('type')
+        
+        channel_layer = get_channel_layer()
+        
+        # Preparar el payload copiando los datos
+        payload = {}
+        
+        # Para eventos de notificación, manejar el subtipo correctamente
+        if event_type == 'notification':
+            # Copiar todos los campos excepto 'type'
+            for key, value in data.items():
+                if key != 'type':
+                    payload[key] = value
+            
+            # Establecer el tipo correcto
+            payload['type'] = 'notification'
+            
+            # Si no hay notification_type, buscarlo en los datos originales
+            if 'notification_type' not in payload:
+                # Podría venir como un campo 'type' anidado que no es 'notification'
+                payload['notification_type'] = 'info'
+        else:
+            # Para otros eventos, copiar todo y ajustar el type
+            payload = dict(data)
+            payload['type'] = event_type.replace('-', '_')
+        
+        # Enviar el evento al grupo de WebSocket
+        async_to_sync(channel_layer.group_send)(
+            'scoreboard',
+            payload
+        )
+        
+        return JsonResponse({
+            'status': 'success',
+            'message': f'Evento {event_type} transmitido a todos los clientes conectados'
+        })
+    except Exception as e:
+        return JsonResponse({'status': 'error', 'message': str(e)}, status=500)

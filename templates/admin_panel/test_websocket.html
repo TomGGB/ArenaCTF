@@ -1,0 +1,393 @@
+{% extends 'admin_panel/base.html' %}
+{% load static %}
+
+{% block title %}Test WebSocket - Admin Panel{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-4">
+    <!-- Header -->
+    <div>
+        <h1 class="text-3xl font-gaming font-bold text-success">🔌 Test de WebSocket</h1>
+        <p class="text-xs opacity-60">Prueba eventos en tiempo real</p>
+    </div>
+
+    <!-- Connection Status -->
+    <div class="card bg-base-200">
+        <div class="card-body p-3">
+            <div class="flex items-center justify-between">
+                <div class="flex items-center gap-3">
+                    <div id="connectionStatus" class="badge badge-error gap-2 badge-sm">
+                        <div class="w-2 h-2 rounded-full bg-current animate-pulse"></div>
+                        Desconectado
+                    </div>
+                    <span id="connectionUrl" class="text-xs opacity-60"></span>
+                </div>
+                <div class="flex gap-1">
+                    <button onclick="connectWebSocket()" class="btn btn-success btn-xs">
+                        🔌 Conectar
+                    </button>
+                    <button onclick="disconnectWebSocket()" class="btn btn-error btn-xs">
+                        ❌ Desconectar
+                    </button>
+                    <button onclick="clearLog()" class="btn btn-warning btn-xs">
+                        🗑️ Limpiar
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="grid grid-cols-1 xl:grid-cols-3 gap-4">
+        <!-- Custom Message Section -->
+        <div class="card bg-gradient-to-br from-primary/20 to-secondary/20 border-2 border-primary/50">
+            <div class="card-body p-3">
+                <h2 class="text-lg font-gaming mb-2">📢 Mensaje Masivo</h2>
+                
+                <div class="space-y-2">
+                    <input type="text" id="customTitle" placeholder="Título" 
+                           class="input input-bordered input-xs w-full" value="📢 Anuncio">
+                    
+                    <textarea id="customMessage" placeholder="Mensaje..." 
+                              class="textarea textarea-bordered textarea-xs h-16 w-full text-xs">El servidor se reiniciará en 5 minutos.</textarea>
+                    
+                    <select id="customType" class="select select-bordered select-xs w-full">
+                        <option value="info">ℹ️ Info</option>
+                        <option value="success">✅ Éxito</option>
+                        <option value="warning">⚠️ Advertencia</option>
+                        <option value="error">❌ Error</option>
+                    </select>
+                    
+                    <div class="flex gap-2">
+                        <button onclick="sendCustomMessage()" class="btn btn-primary btn-xs flex-1">
+                            📤 Todos
+                        </button>
+                        <button onclick="sendToDisplayOnly()" class="btn btn-secondary btn-xs">
+                            📺 Display
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Event Log Panel -->
+        <div class="card bg-base-200 xl:col-span-2">
+            <div class="card-body p-3">
+                <h2 class="text-lg font-gaming mb-2">📋 Log de Eventos</h2>
+                
+                <div id="log" class="bg-base-300 rounded-lg p-2 h-[200px] overflow-y-auto font-mono text-[10px] space-y-0.5">
+                    <div class="text-center opacity-50 mt-16 text-xs">
+                        Sin eventos. Conecta el WebSocket.
+                    </div>
+                </div>
+
+                <!-- Stats -->
+                <div class="grid grid-cols-3 gap-2 mt-2">
+                    <div class="bg-base-300 rounded-lg p-2 text-center">
+                        <div class="text-[10px] opacity-70">Recibidos</div>
+                        <div class="text-lg text-primary font-bold" id="eventCount">0</div>
+                    </div>
+                    <div class="bg-base-300 rounded-lg p-2 text-center">
+                        <div class="text-[10px] opacity-70">Enviados</div>
+                        <div class="text-lg text-secondary font-bold" id="sentCount">0</div>
+                    </div>
+                    <div class="bg-base-300 rounded-lg p-2 text-center">
+                        <div class="text-[10px] opacity-70">Última</div>
+                        <div class="text-xs font-bold" id="lastActivity">-</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Test Events Section -->
+    <div class="grid grid-cols-2 lg:grid-cols-4 gap-3">
+        <!-- Time Events -->
+        <div class="card bg-base-200">
+            <div class="card-body p-3">
+                <h3 class="text-sm font-gaming mb-2">⏰ Tiempo</h3>
+                <div class="space-y-1">
+                    <button onclick="sendTestEvent('ctf_time_warning', {message: '⏰ Quedan 60 minutos para que finalice el CTF', minutes_left: 60})" 
+                            class="btn btn-xs btn-info w-full">60m</button>
+                    <button onclick="sendTestEvent('ctf_time_warning', {message: '⚠️ ¡Atención! Quedan 30 minutos para que finalice el CTF', minutes_left: 30})" 
+                            class="btn btn-xs btn-warning w-full">30m</button>
+                    <button onclick="sendTestEvent('ctf_time_warning', {message: '🚨 ¡ADVERTENCIA! Solo quedan 5 minutos para finalizar', minutes_left: 5})" 
+                            class="btn btn-xs btn-error w-full">5m</button>
+                    <button onclick="sendTestEvent('ctf_time_warning', {message: '⏰ ¡ÚLTIMO MINUTO! El CTF termina en 1 minuto', minutes_left: 1})" 
+                            class="btn btn-xs btn-error w-full">1m</button>
+                    <button onclick="sendTestEvent('ctf_ended', {message: '🏁 El CTF ha finalizado. Ya no se aceptan más submissions'})" 
+                            class="btn btn-xs btn-error w-full">🏁</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Flag Events -->
+        <div class="card bg-base-200">
+            <div class="card-body p-3">
+                <h3 class="text-sm font-gaming mb-2">🚩 Flags</h3>
+                <div class="space-y-1">
+                    <button onclick="sendTestEvent('flag_solved', {message: '🚩 Flag resuelto', team: 'Alpha', challenge: 'Web', points: 500})" 
+                            class="btn btn-xs btn-success w-full">Resolver</button>
+                    <button onclick="sendTestEvent('first_blood', {message: '🩸 First Blood', team: 'Beta', challenge: 'Crypto'})" 
+                            class="btn btn-xs btn-warning w-full">Blood</button>
+                    <button onclick="sendTestEvent('achievement_unlocked', {message: '🏆 Logro', achievement: 'Speed'})" 
+                            class="btn btn-xs btn-secondary w-full">Logro</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Rank Events -->
+        <div class="card bg-base-200">
+            <div class="card-body p-3">
+                <h3 class="text-sm font-gaming mb-2">📊 Ranking</h3>
+                <div class="space-y-1">
+                    <button onclick="sendTestEvent('rank_change', {message: '📈 Subió', team: 'Delta', old_rank: 3, new_rank: 1})" 
+                            class="btn btn-xs btn-success w-full">Subir</button>
+                    <button onclick="sendTestEvent('rank_change', {message: '📉 Bajó', team: 'Epsilon', old_rank: 3, new_rank: 5})" 
+                            class="btn btn-xs btn-error w-full">Bajar</button>
+                </div>
+            </div>
+        </div>
+
+        <!-- System Events -->
+        <div class="card bg-base-200">
+            <div class="card-body p-3">
+                <h3 class="text-sm font-gaming mb-2">⚙️ Sistema</h3>
+                <div class="space-y-1">
+                    <button onclick="sendTestEvent('notification', {message: 'ℹ️ Info', notification_type: 'info'})" 
+                            class="btn btn-xs btn-info w-full">Info</button>
+                    <button onclick="sendTestEvent('notification', {message: '✅ Éxito', notification_type: 'success'})" 
+                            class="btn btn-xs btn-success w-full">Éxito</button>
+                    <button onclick="sendTestEvent('notification', {message: '⚠️ Warning', notification_type: 'warning'})" 
+                            class="btn btn-xs btn-warning w-full">Warning</button>
+                    <button onclick="sendTestEvent('notification', {message: '❌ Error', notification_type: 'error'})" 
+                            class="btn btn-xs btn-error w-full">Error</button>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    let ws = null;
+    let eventCount = 0;
+    let sentCount = 0;
+
+    function getCookie(name) {
+        let cookieValue = null;
+        if (document.cookie && document.cookie !== '') {
+            const cookies = document.cookie.split(';');
+            for (let i = 0; i < cookies.length; i++) {
+                const cookie = cookies[i].trim();
+                if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                    cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                    break;
+                }
+            }
+        }
+        return cookieValue;
+    }
+
+    function connectWebSocket() {
+        if (ws && ws.readyState === WebSocket.OPEN) {
+            addLog('⚠️ Ya estás conectado', 'warning');
+            return;
+        }
+
+        const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:';
+        const wsUrl = `${protocol}//${window.location.host}/ws/scoreboard/`;
+        
+        document.getElementById('connectionUrl').textContent = wsUrl;
+        
+        ws = new WebSocket(wsUrl);
+
+        ws.onopen = function(e) {
+            updateConnectionStatus(true);
+            addLog('✅ Conectado al WebSocket', 'success');
+        };
+
+        ws.onmessage = function(event) {
+            const data = JSON.parse(event.data);
+            eventCount++;
+            document.getElementById('eventCount').textContent = eventCount;
+            updateLastActivity();
+            addLog(`📥 ${data.type}: ${JSON.stringify(data).substring(0, 100)}`, 'info');
+        };
+
+        ws.onerror = function(error) {
+            addLog('❌ Error de conexión', 'error');
+        };
+
+        ws.onclose = function(event) {
+            updateConnectionStatus(false);
+            addLog('🔌 Desconectado', 'error');
+        };
+    }
+
+    function disconnectWebSocket() {
+        if (ws) {
+            ws.close();
+            ws = null;
+            addLog('👋 Desconexión manual', 'warning');
+        }
+    }
+
+    function updateConnectionStatus(connected) {
+        const statusEl = document.getElementById('connectionStatus');
+        if (connected) {
+            statusEl.className = 'badge badge-success gap-2 badge-sm';
+            statusEl.innerHTML = '<div class="w-2 h-2 rounded-full bg-current animate-pulse"></div> Conectado';
+        } else {
+            statusEl.className = 'badge badge-error gap-2 badge-sm';
+            statusEl.innerHTML = '<div class="w-2 h-2 rounded-full bg-current animate-pulse"></div> Desconectado';
+        }
+    }
+
+    function updateLastActivity() {
+        const now = new Date();
+        const timeStr = now.toLocaleTimeString('es-ES', { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+        document.getElementById('lastActivity').textContent = timeStr;
+    }
+
+    function addLog(message, type = 'info') {
+        const logEl = document.getElementById('log');
+        const timestamp = new Date().toLocaleTimeString('es-ES');
+        const colors = {
+            'info': 'text-info',
+            'success': 'text-success',
+            'warning': 'text-warning',
+            'error': 'text-error'
+        };
+        
+        const entry = document.createElement('div');
+        entry.className = colors[type] || 'text-base-content';
+        entry.textContent = `[${timestamp}] ${message}`;
+        
+        // Clear placeholder if exists
+        if (logEl.children.length === 1 && logEl.children[0].classList.contains('opacity-50')) {
+            logEl.innerHTML = '';
+        }
+        
+        logEl.appendChild(entry);
+        logEl.scrollTop = logEl.scrollHeight;
+    }
+
+    function clearLog() {
+        document.getElementById('log').innerHTML = '<div class="text-center opacity-50 mt-16 text-xs">Log limpiado</div>';
+        eventCount = 0;
+        sentCount = 0;
+        document.getElementById('eventCount').textContent = '0';
+        document.getElementById('sentCount').textContent = '0';
+        addLog('🗑️ Log limpiado', 'warning');
+    }
+
+    async function sendTestEvent(eventType, payload) {
+        const csrftoken = getCookie('csrftoken');
+        
+        try {
+            const response = await fetch('/admin-panel/broadcast-test-event/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({
+                    type: eventType,
+                    ...payload
+                })
+            });
+
+            const result = await response.json();
+            if (result.status === 'success') {
+                sentCount++;
+                document.getElementById('sentCount').textContent = sentCount;
+                addLog(`📤 Enviado: ${eventType}`, 'success');
+            } else {
+                addLog(`❌ Error: ${result.message || 'Unknown'}`, 'error');
+            }
+        } catch (error) {
+            addLog(`❌ Error al enviar: ${error.message}`, 'error');
+        }
+    }
+
+    async function sendCustomMessage() {
+        const title = document.getElementById('customTitle').value;
+        const message = document.getElementById('customMessage').value;
+        const type = document.getElementById('customType').value;
+
+        if (!title || !message) {
+            addLog('⚠️ Completa título y mensaje', 'warning');
+            return;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+        
+        try {
+            const response = await fetch('/admin-panel/broadcast-test-event/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({
+                    type: 'custom_announcement',
+                    title: title,
+                    message: message,
+                    notification_type: type
+                })
+            });
+
+            const result = await response.json();
+            if (result.status === 'success') {
+                sentCount++;
+                document.getElementById('sentCount').textContent = sentCount;
+                addLog(`📢 Mensaje masivo enviado a todos`, 'success');
+            }
+        } catch (error) {
+            addLog(`❌ Error: ${error.message}`, 'error');
+        }
+    }
+
+    async function sendToDisplayOnly() {
+        const title = document.getElementById('customTitle').value;
+        const message = document.getElementById('customMessage').value;
+        const type = document.getElementById('customType').value;
+
+        if (!title || !message) {
+            addLog('⚠️ Completa título y mensaje', 'warning');
+            return;
+        }
+
+        const csrftoken = getCookie('csrftoken');
+        
+        try {
+            const response = await fetch('/admin-panel/broadcast-test-event/', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'X-CSRFToken': csrftoken
+                },
+                body: JSON.stringify({
+                    type: 'notification',
+                    message: `${title}: ${message}`,
+                    notification_type: type,
+                    target: 'display'
+                })
+            });
+
+            const result = await response.json();
+            if (result.status === 'success') {
+                sentCount++;
+                document.getElementById('sentCount').textContent = sentCount;
+                addLog(`📺 Enviado solo a display`, 'success');
+            }
+        } catch (error) {
+            addLog(`❌ Error: ${error.message}`, 'error');
+        }
+    }
+
+    // Auto-connect on page load
+    document.addEventListener('DOMContentLoaded', function() {
+        connectWebSocket();
+    });
+</script>
+{% endblock %}

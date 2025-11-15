@@ -1,0 +1,115 @@
+{% extends 'base.html' %}
+
+{% block title %}Todos los Equipos - {{ ctf_name }}{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Breadcrumb Navigation -->
+    <div class="text-sm breadcrumbs mb-4">
+        <ul>
+            <li><a href="{% url 'scoreboard:dashboard' %}" class="link link-hover">Dashboard</a></li>
+            {% if user_team %}
+            <li><a href="{% url 'teams:team_detail' user_team.id %}" class="link link-hover">Mi Equipo</a></li>
+            {% endif %}
+            <li>Todos los Equipos</li>
+        </ul>
+    </div>
+
+    <!-- Header -->
+    <div class="text-center mb-8">
+        <h1 class="text-4xl font-gaming font-bold text-primary mb-2">
+            🏆 Todos los Equipos
+        </h1>
+        <p class="text-sm opacity-60">{{ teams.count }} equipos registrados en el CTF</p>
+        
+        {% if user_team %}
+        <div class="alert alert-success inline-flex mt-4 max-w-md">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+            <div>
+                <div class="text-xs">Tu equipo:</div>
+                <div class="font-gaming font-bold">{{ user_team.name }}</div>
+            </div>
+        </div>
+        {% endif %}
+    </div>
+
+    <!-- Teams Grid -->
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+        {% for team in teams %}
+        <a href="{% url 'teams:team_detail' team.id %}" 
+           class="card bg-base-200 hover:shadow-xl transition-all cursor-pointer {% if user_team and team.id == user_team.id %}border-2 border-success{% endif %}" >
+            <div class="card-body p-4">
+                <!-- Team Header -->
+                <div class="flex items-center gap-3 mb-3">
+                    <div class="w-10 h-10 rounded-full flex items-center justify-center text-2xl" 
+                         style="background-color: {{ team.color }}33; border: 2px solid {{ team.color }}">
+                        {% if forloop.counter == 1 %}
+                            🥇
+                        {% elif forloop.counter == 2 %}
+                            🥈
+                        {% elif forloop.counter == 3 %}
+                            🥉
+                        {% else %}
+                            🏆
+                        {% endif %}
+                    </div>
+                    <div class="flex-1">
+                        <h2 class="text-lg font-gaming font-bold" style="color: {{ team.color }}">
+                            {{ team.name }}
+                        </h2>
+                        <div class="text-xs opacity-60">
+                            Puesto #{{ forloop.counter }}
+                        </div>
+                    </div>
+                    {% if user_team and team.id == user_team.id %}
+                    <div class="badge badge-success badge-sm">Tu equipo</div>
+                    {% endif %}
+                </div>
+                
+                <!-- Score Display -->
+                <div class="stats bg-base-300 shadow mb-2">
+                    <div class="stat py-2 px-3">
+                        <div class="stat-title text-xs">Puntos</div>
+                        <div class="stat-value text-2xl font-gaming text-primary">{{ team.total_score }}</div>
+                    </div>
+                </div>
+                
+                <!-- Team Stats -->
+                <div class="grid grid-cols-2 gap-2 text-xs">
+                    <div class="flex items-center gap-2 opacity-70">
+                        <span>👥</span>
+                        <span>{{ team.members.count }} miembro{{ team.members.count|pluralize }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 opacity-70">
+                        <span>📅</span>
+                        <span>{{ team.created_at|date:"d/m/Y" }}</span>
+                    </div>
+                </div>
+            </div>
+        </a>
+        {% empty %}
+        <!-- Empty State -->
+        <div class="col-span-full">
+            <div class="alert shadow-lg">
+                <div class="flex items-center justify-center w-full">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-info shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <span class="text-xl font-gaming">No hay equipos registrados aún...</span>
+                </div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <!-- Back Button -->
+    {% if user_team %}
+    <div class="text-center mt-8">
+        <a href="{% url 'teams:team_detail' user_team.id %}" 
+           class="btn btn-success font-gaming">
+            ← Volver a Mi Equipo
+        </a>
+    </div>
+    {% endif %}
+</div>
+{% endblock %}

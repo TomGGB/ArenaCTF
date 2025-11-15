@@ -38,4 +38,8 @@ urlpatterns = [
     
     # Submissions
     path('submissions/', views.submissions_list, name='submissions_list'),
+    
+    # WebSocket Test
+    path('test-websocket/', views.test_websocket, name='test_websocket'),
+    path('broadcast-test-event/', views.broadcast_test_event, name='broadcast_test_event'),
 ]

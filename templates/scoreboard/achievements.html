@@ -1,0 +1,227 @@
+{% extends 'base.html' %}
+
+{% block title %}Logros - ArenaCTF{% endblock %}
+
+{% block content %}
+<div class="container mx-auto px-4 py-8">
+    <!-- Header -->
+    <div class="text-center mb-8">
+        <h1 class="text-5xl font-gaming font-bold mb-4 text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 via-amber-500 to-orange-500">
+            🏅 LOGROS DEL CTF
+        </h1>
+        <p class="text-lg opacity-80 mb-6">
+            Desbloquea logros completando desafíos y alcanzando hitos especiales
+        </p>
+    </div>
+
+    <!-- Estadísticas Generales -->
+    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div class="stats shadow border border-base-content/10">
+            <div class="stat">
+                <div class="stat-title text-xs">Logros de Equipo</div>
+                <div class="stat-value text-3xl font-gaming text-warning">{{ earned_team }}/{{ total_team }}</div>
+                <div class="stat-desc text-xs">
+                    {% if total_team > 0 %}
+                        {% widthratio earned_team total_team 100 %}% completado
+                    {% else %}
+                        0% completado
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="stats shadow border border-base-content/10">
+            <div class="stat">
+                <div class="stat-title text-xs">Logros Individuales</div>
+                <div class="stat-value text-3xl font-gaming text-info">{{ earned_individual }}/{{ total_individual }}</div>
+                <div class="stat-desc text-xs">
+                    {% if total_individual > 0 %}
+                        {% widthratio earned_individual total_individual 100 %}% completado
+                    {% else %}
+                        0% completado
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+        
+        <div class="stats shadow border border-base-content/10">
+            <div class="stat">
+                <div class="stat-title text-xs">Total Desbloqueados</div>
+                <div class="stat-value text-3xl font-gaming text-success">
+                    {% widthratio earned_team|add:earned_individual 1 1 %}
+                </div>
+                <div class="stat-desc text-xs">logros obtenidos</div>
+            </div>
+        </div>
+        
+        <div class="stats shadow border border-base-content/10">
+            <div class="stat">
+                <div class="stat-title text-xs">Progreso Total</div>
+                <div class="stat-value text-3xl font-gaming text-secondary">
+                    {% with total=total_team|add:total_individual %}
+                        {% if total > 0 %}
+                            {% widthratio earned_team|add:earned_individual total 100 %}%
+                        {% else %}
+                            0%
+                        {% endif %}
+                    {% endwith %}
+                </div>
+                <div class="stat-desc text-xs">completado</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Logros de Equipo -->
+    <div class="card bg-base-300 border border-base-content/10 mb-8">
+        <div class="card-body">
+            <h2 class="text-3xl font-gaming font-bold mb-6 flex items-center gap-3">
+                <span>🏆</span>
+                <span>Logros de Equipo</span>
+                {% if user_team %}
+                <span class="text-lg opacity-60">- {{ user_team.name }}</span>
+                {% endif %}
+            </h2>
+            
+            {% if not user_team %}
+            <div class="alert alert-warning mb-4">
+                <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z"></path>
+                </svg>
+                <span>Debes unirte a un equipo para desbloquear logros de equipo</span>
+            </div>
+            {% endif %}
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for achievement in team_achievements %}
+                <div class="achievement-card p-5 rounded-xl border-2 transition-all duration-300 hover:scale-105 {% if achievement.earned %}bg-gradient-to-br from-yellow-900/40 to-amber-900/40 border-yellow-500/50{% else %}bg-base-200 border-base-content/10 opacity-50 grayscale{% endif %}">
+                    <div class="flex items-start gap-4 mb-3">
+                        <div class="text-5xl {% if achievement.earned %}animate-bounce-slow{% endif %}">
+                            {{ achievement.icon }}
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-gaming font-bold text-lg {% if achievement.earned %}text-yellow-400{% else %}text-base-content/60{% endif %}">
+                                {{ achievement.name }}
+                            </h3>
+                            {% if achievement.earned %}
+                            <div class="badge badge-success badge-sm mt-1">
+                                ✓ Desbloqueado
+                            </div>
+                            {% else %}
+                            <div class="badge badge-ghost badge-sm mt-1">
+                                🔒 Bloqueado
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <p class="text-sm {% if achievement.earned %}opacity-90{% else %}opacity-60{% endif %} mb-3">
+                        {{ achievement.description }}
+                    </p>
+                    
+                    {% if achievement.earned and achievement.earned_at %}
+                    <div class="text-xs opacity-70 flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Desbloqueado: {{ achievement.earned_at|date:"d/m/Y H:i" }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Logros Individuales -->
+    <div class="card bg-base-300 border border-base-content/10 mb-8">
+        <div class="card-body">
+            <h2 class="text-3xl font-gaming font-bold mb-6 flex items-center gap-3">
+                <span>⭐</span>
+                <span>Logros Individuales</span>
+                <span class="text-lg opacity-60">- {{ request.user.username }}</span>
+            </h2>
+            
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {% for achievement in individual_achievements %}
+                <div class="achievement-card p-5 rounded-xl border-2 transition-all duration-300 hover:scale-105 {% if achievement.earned %}bg-gradient-to-br from-blue-900/40 to-indigo-900/40 border-blue-500/50{% else %}bg-base-200 border-base-content/10 opacity-50 grayscale{% endif %}">
+                    <div class="flex items-start gap-4 mb-3">
+                        <div class="text-5xl {% if achievement.earned %}animate-bounce-slow{% endif %}">
+                            {{ achievement.icon }}
+                        </div>
+                        <div class="flex-1">
+                            <h3 class="font-gaming font-bold text-lg {% if achievement.earned %}text-blue-400{% else %}text-base-content/60{% endif %}">
+                                {{ achievement.name }}
+                            </h3>
+                            {% if achievement.earned %}
+                            <div class="badge badge-info badge-sm mt-1">
+                                ✓ Desbloqueado
+                            </div>
+                            {% else %}
+                            <div class="badge badge-ghost badge-sm mt-1">
+                                🔒 Bloqueado
+                            </div>
+                            {% endif %}
+                        </div>
+                    </div>
+                    
+                    <p class="text-sm {% if achievement.earned %}opacity-90{% else %}opacity-60{% endif %} mb-3">
+                        {{ achievement.description }}
+                    </p>
+                    
+                    {% if achievement.earned and achievement.earned_at %}
+                    <div class="text-xs opacity-70 flex items-center gap-1">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-4 w-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
+                        </svg>
+                        Desbloqueado: {{ achievement.earned_at|date:"d/m/Y H:i" }}
+                    </div>
+                    {% endif %}
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <!-- Botón Volver -->
+    <div class="text-center">
+        <a href="{% url 'scoreboard:dashboard' %}" class="btn btn-ghost font-gaming">
+            ← Volver al Dashboard
+        </a>
+    </div>
+</div>
+
+<style>
+@keyframes bounce-slow {
+    0%, 100% {
+        transform: translateY(0);
+    }
+    50% {
+        transform: translateY(-10px);
+    }
+}
+
+.animate-bounce-slow {
+    animation: bounce-slow 2s ease-in-out infinite;
+}
+
+.achievement-card {
+    position: relative;
+    overflow: hidden;
+}
+
+.achievement-card::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: -100%;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+    transition: left 0.5s;
+}
+
+.achievement-card:hover::before {
+    left: 100%;
+}
+</style>
+{% endblock %}
