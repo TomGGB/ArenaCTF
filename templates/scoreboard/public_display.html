@@ -33,6 +33,7 @@
     <style>
         body {
             font-family: 'Rajdhani', sans-serif;
+            overflow: hidden;
         }
         
         /* Animaciones de notificaciones */
@@ -86,6 +87,33 @@
         .status-pulse {
             animation: pulse 2s ease-in-out infinite;
         }
+        
+        /* Timeline last point pulse */
+        @keyframes pointPulse {
+            0%, 100% { 
+                transform: scale(1);
+                opacity: 1;
+            }
+            50% { 
+                transform: scale(1.5);
+                opacity: 0.7;
+            }
+        }
+        
+        /* Full viewport layout */
+        .main-container {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .content-wrapper {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            min-height: 0;
+        }
     </style>
 </head>
 <body class="min-h-screen">
@@ -103,35 +131,37 @@
         <source src="{% static 'sounds/rank_down.mp3' %}" type="audio/mpeg">
     </audio>
 
-    <div class="container mx-auto px-4 py-8">
-        <!-- Header -->
-        <div class="flex items-center justify-between mb-8">
+    <div class="main-container">
+        <div class="container mx-auto px-4 py-4">
+            <div class="content-wrapper">
+                <!-- Header -->
+                <div class="flex items-center justify-between mb-3 flex-shrink-0">
             <div>
-                <h1 class="text-5xl font-gaming font-bold bg-gradient-to-r from-success to-info bg-clip-text text-transparent mb-2">
+                <h1 class="text-4xl font-gaming font-bold bg-gradient-to-r from-success to-info bg-clip-text text-transparent mb-1">
                     ARENA SCOREBOARD
                 </h1>
-                <p class="text-sm opacity-60">
-                    <span class="badge badge-success gap-2">
+                <p class="text-xs opacity-60">
+                    <span class="badge badge-success badge-sm gap-2">
                         <span class="status-pulse inline-block w-2 h-2 bg-success-content rounded-full"></span>
                         EN VIVO
                     </span>
                     <span class="ml-2">Última actualización: <span id="currentTime"></span></span>
                 </p>
             </div>
-            <div class="flex items-center gap-3">
+            <div class="flex items-center gap-2">
                 <!-- Contador de tiempo restante -->
                 <div id="ctfTimeCounter" class="hidden">
-                    <div class="badge badge-lg badge-primary font-gaming gap-3 px-6 py-4 text-xl">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                    <div class="badge badge-md badge-primary font-gaming gap-2 px-4 py-3 text-base">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                         </svg>
                         <div class="flex items-center gap-2">
-                            <span id="timeLabel" class="text-sm opacity-70 uppercase font-semibold whitespace-nowrap"></span>
-                            <span id="timeDisplay" class="font-mono font-bold text-lg whitespace-nowrap">--:--:--</span>
+                            <span id="timeLabel" class="text-xs opacity-70 uppercase font-semibold whitespace-nowrap"></span>
+                            <span id="timeDisplay" class="font-mono font-bold text-base whitespace-nowrap">--:--:--</span>
                         </div>
                     </div>
                 </div>
-                <button onclick="toggleAudio()" id="audioToggle" class="btn btn-success gap-2">
+                <button onclick="toggleAudio()" id="audioToggle" class="btn btn-success btn-sm gap-2">
                     <span id="audioIcon">🔊</span>
                     <span id="audioText">Audio</span>
                 </button>
@@ -139,42 +169,42 @@
         </div>
 
         <!-- Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-4 mb-8">
+        <div class="grid grid-cols-1 md:grid-cols-4 gap-2 mb-3 flex-shrink-0">
             <div class="stats shadow border border-base-content/10 hover:border-success/50 transition-colors">
-                <div class="stat">
+                <div class="stat py-2">
                     <div class="stat-figure text-success">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0zm6 3a2 2 0 11-4 0 2 2 0 014 0zM7 10a2 2 0 11-4 0 2 2 0 014 0z"></path>
                         </svg>
                     </div>
                     <div class="stat-title text-xs">Equipos Activos</div>
-                    <div class="stat-value text-3xl font-gaming text-success" id="totalTeams">{{ teams|length }}</div>
+                    <div class="stat-value text-2xl font-gaming text-success" id="totalTeams">{{ teams|length }}</div>
                     <div class="stat-desc text-xs opacity-60">Compitiendo</div>
                 </div>
             </div>
             
             <div class="stats shadow border border-base-content/10 hover:border-warning/50 transition-colors">
-                <div class="stat">
+                <div class="stat py-2">
                     <div class="stat-figure text-warning">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 21v-4m0 0V5a2 2 0 012-2h6.5l1 1H21l-3 6 3 6h-8.5l-1-1H5a2 2 0 00-2 2zm9-13.5V9"></path>
                         </svg>
                     </div>
                     <div class="stat-title text-xs">Flags Capturadas</div>
-                    <div class="stat-value text-3xl font-gaming text-warning" id="totalFlags">{{ recent_submissions|length }}</div>
+                    <div class="stat-value text-2xl font-gaming text-warning" id="totalFlags">{{ recent_submissions|length }}</div>
                     <div class="stat-desc text-xs opacity-60">Total de resoluciones</div>
                 </div>
             </div>
             
             <div class="stats shadow border border-base-content/10 hover:border-error/50 transition-colors">
-                <div class="stat">
+                <div class="stat py-2">
                     <div class="stat-figure text-error">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v13m0-13V6a2 2 0 112 2h-2zm0 0V5.5A2.5 2.5 0 109.5 8H12zm-7 4h14M5 12a2 2 0 110-4h14a2 2 0 110 4M5 12v7a2 2 0 002 2h10a2 2 0 002-2v-7"></path>
                         </svg>
                     </div>
                     <div class="stat-title text-xs">First Bloods</div>
-                    <div class="stat-value text-3xl font-gaming text-error" id="totalFirstBloods">{{ first_bloods|length }}</div>
+                    <div class="stat-value text-2xl font-gaming text-error" id="totalFirstBloods">{{ first_bloods|length }}</div>
                     <div class="stat-desc text-xs opacity-60">Primeras resoluciones</div>
                 </div>
             </div>
@@ -193,44 +223,45 @@
             </div>
         </div>
 
-        <!-- Timeline Chart -->
-        <div class="card bg-base-300 border border-base-content/10 mb-6">
-            <div class="card-body">
-                <h2 class="text-2xl font-gaming font-bold mb-4 flex items-center gap-2">
-                    <span>📊</span>
-                    <span>Timeline de Progreso</span>
-                </h2>
-                <div class="h-64">
-                    <canvas id="timelineChart"></canvas>
+        <!-- Timeline and Rankings Grid -->
+        <div class="grid grid-cols-1 xl:grid-cols-3 gap-3 mb-3" style="height: 55vh;">
+            <!-- Timeline Chart -->
+            <div class="xl:col-span-2 h-full">
+                <div class="card bg-base-300 border border-base-content/10 h-full">
+                    <div class="card-body p-4">
+                        <h2 class="text-xl font-gaming font-bold mb-2 flex items-center gap-2">
+                            <span>📊</span>
+                            <span>Timeline de Progreso</span>
+                        </h2>
+                        <div style="height: calc(100% - 50px);">
+                            <canvas id="timelineChart"></canvas>
+                        </div>
+                    </div>
                 </div>
             </div>
-        </div>
 
-        <!-- Main Content Grid -->
-        <div class="grid grid-cols-1 xl:grid-cols-3 gap-6">
-            <!-- Scoreboard Table -->
-            <div class="xl:col-span-2">
-                <div class="card bg-base-300 border border-base-content/10">
-                    <div class="card-body">
-                        <h2 class="card-title text-2xl font-gaming mb-4 flex items-center gap-2">
+            <!-- Scoreboard Rankings -->
+            <div class="h-full">
+                <div class="card bg-base-300 border border-base-content/10 h-full flex flex-col">
+                    <div class="card-body p-4 flex-1 flex flex-col min-h-0">
+                        <h2 class="card-title text-xl font-gaming mb-2 flex items-center gap-2">
                             <span>🏆</span>
                             <span>Rankings</span>
                         </h2>
                         
-                        <div class="overflow-x-auto">
-                            <table class="table">
-                                <thead>
+                        <div class="overflow-y-auto flex-1 -mx-2 px-2" style="max-height: 100%;">
+                            <table class="table table-compact">
+                                <thead class="sticky top-0 bg-base-300 z-10">
                                     <tr>
-                                        <th class="font-gaming">#</th>
-                                        <th class="font-gaming">Equipo</th>
-                                        <th class="font-gaming">Puntos</th>
-                                        <th class="font-gaming">Flags</th>
+                                        <th class="font-gaming text-xs">#</th>
+                                        <th class="font-gaming text-xs">Equipo</th>
+                                        <th class="font-gaming text-xs">Pts</th>
                                     </tr>
                                 </thead>
                                 <tbody id="rankingsTable">
                                     {% for team in teams %}
                                     <tr class="team-row hover transition-all" data-team-id="{{ team.id }}">
-                                        <td class="font-mono font-bold text-lg">
+                                        <td class="font-mono font-bold">
                                             {% if forloop.counter == 1 %}
                                                 <span class="text-yellow-400">🥇</span>
                                             {% elif forloop.counter == 2 %}
@@ -242,17 +273,14 @@
                                             {% endif %}
                                         </td>
                                         <td>
-                                            <div class="flex items-center gap-3">
-                                                <div class="w-4 h-4 rounded-full shadow-lg" 
-                                                     style="background-color: {{ team.color }}; box-shadow: 0 0 10px {{ team.color }}80;"></div>
-                                                <span class="font-gaming font-semibold">{{ team.name }}</span>
+                                            <div class="flex items-center gap-2">
+                                                <div class="w-3 h-3 rounded-full shadow-lg" 
+                                                     style="background-color: {{ team.color }}; box-shadow: 0 0 8px {{ team.color }}80;"></div>
+                                                <span class="font-gaming font-semibold text-sm truncate">{{ team.name }}</span>
                                             </div>
                                         </td>
                                         <td>
-                                            <span class="badge badge-success font-mono font-bold">{{ team.total_score }} pts</span>
-                                        </td>
-                                        <td class="opacity-60">
-                                            <span class="badge badge-ghost badge-sm">{{ team.solved_count }} flags</span>
+                                            <span class="badge badge-success badge-sm font-mono">{{ team.total_score }}</span>
                                         </td>
                                     </tr>
                                     {% endfor %}
@@ -262,47 +290,50 @@
                     </div>
                 </div>
             </div>
+        </div>
 
-            <!-- Sidebar -->
-            <div class="space-y-6">
-                <!-- First Bloods -->
-                <div class="card bg-base-300 border border-base-content/10">
-                    <div class="card-body">
-                        <h3 class="card-title text-xl font-gaming mb-4">🩸 First Bloods</h3>
-                        
-                        <div class="space-y-2" id="firstBloodsList">
-                            {% for fb in first_bloods|slice:":10" %}
-                            <div class="p-3 bg-base-200 rounded-lg border border-error/20">
-                                <div class="font-gaming font-semibold text-sm">{{ fb.challenge.title }}</div>
-                                <div class="text-xs opacity-60 mt-1">
-                                    <span style="color: {{ fb.team.color }}">{{ fb.team.name }}</span>
-                                    <span class="badge badge-error badge-xs ml-2">+{{ fb.bonus_points }}</span>
-                                </div>
+        <!-- First Bloods and Recent Activity Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-3" style="height: 12vh;">
+            <!-- First Bloods -->
+            <div class="card bg-base-300 border border-base-content/10 h-full flex flex-col">
+                <div class="card-body p-2 flex-1 flex flex-col min-h-0">
+                    <h3 class="text-xs font-gaming mb-1 font-bold">🩸 First Bloods</h3>
+                    
+                    <div class="overflow-y-auto flex-1 space-y-1" id="firstBloodsList">
+                        {% for fb in first_bloods %}
+                        <div class="p-1 bg-base-200 rounded border border-error/20">
+                            <div class="font-gaming font-semibold text-xs">{{ fb.challenge.title }}</div>
+                            <div class="text-xs opacity-60">
+                                <span style="color: {{ fb.team.color }}">{{ fb.team.name }}</span>
+                                <span class="badge badge-error badge-xs ml-1">+{{ fb.bonus_points }}</span>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <!-- Recent Activity -->
+            <div class="card bg-base-300 border border-base-content/10 h-full flex flex-col">
+                <div class="card-body p-2 flex-1 flex flex-col min-h-0">
+                    <h3 class="text-xs font-gaming mb-1 font-bold">⚡ Actividad Reciente</h3>
+                    
+                    <div class="overflow-y-auto flex-1 space-y-1" id="recentActivity">
+                        {% for sub in recent_submissions %}
+                        <div class="p-1 bg-base-200 rounded text-xs">
+                            <div class="font-gaming font-semibold" style="color: {{ sub.team.color }}">
+                                {{ sub.team.name }}
+                            </div>
+                            <div class="opacity-60">
+                                {{ sub.challenge.title }} • {{ sub.submitted_at|timesince }} ago
+                            </div>
                             </div>
                             {% endfor %}
                         </div>
                     </div>
                 </div>
-
-                <!-- Recent Activity -->
-                <div class="card bg-base-300 border border-base-content/10">
-                    <div class="card-body">
-                        <h3 class="card-title text-xl font-gaming mb-4">⚡ Actividad Reciente</h3>
-                        
-                        <div class="space-y-2" id="recentActivity">
-                            {% for sub in recent_submissions|slice:":10" %}
-                            <div class="p-2 bg-base-200 rounded-lg text-xs">
-                                <div class="font-gaming font-semibold" style="color: {{ sub.team.color }}">
-                                    {{ sub.team.name }}
-                                </div>
-                                <div class="opacity-60 mt-1">
-                                    {{ sub.challenge.title }} • {{ sub.submitted_at|timesince }} ago
-                                </div>
-                            </div>
-                            {% endfor %}
-                        </div>
-                    </div>
-                </div>
+            </div>
+        </div>
             </div>
         </div>
     </div>
@@ -465,6 +496,9 @@
 
             // Crear dataset para cada equipo
             Object.keys(teamData).forEach(teamName => {
+                const points = teamData[teamName];
+                const pointRadii = points.map((_, index) => index === points.length - 1 ? 0 : 4);
+                
                 datasets.push({
                     label: teamName,
                     data: teamData[teamName],
@@ -472,7 +506,7 @@
                     backgroundColor: (teamColors[teamName] || '#00FF41') + '20',
                     borderWidth: 3,
                     tension: 0.4,
-                    pointRadius: 4,
+                    pointRadius: pointRadii,
                     pointHoverRadius: 6,
                     fill: false
                 });
@@ -483,12 +517,62 @@
                 timelineChart.destroy();
             }
 
+            const pulsingPointPlugin = {
+                id: 'pulsingPoint',
+                afterDatasetsDraw(chart) {
+                    const ctx = chart.ctx;
+                    chart.data.datasets.forEach((dataset, datasetIndex) => {
+                        const meta = chart.getDatasetMeta(datasetIndex);
+                        if (!meta.hidden && dataset.data.length > 0) {
+                            const lastPoint = meta.data[meta.data.length - 1];
+                            if (lastPoint) {
+                                const x = lastPoint.x;
+                                const y = lastPoint.y;
+                                const time = Date.now() / 1500; // Más lento
+                                const scale = 1 + Math.sin(time * Math.PI) * 0.5;
+                                const radius = 10 * scale;
+                                
+                                // Halo exterior pulsante
+                                ctx.save();
+                                ctx.beginPath();
+                                ctx.arc(x, y, radius, 0, 2 * Math.PI);
+                                ctx.fillStyle = dataset.borderColor;
+                                ctx.globalAlpha = 0.3 + Math.sin(time * Math.PI) * 0.3;
+                                ctx.fill();
+                                ctx.restore();
+                                
+                                // Halo medio
+                                ctx.save();
+                                ctx.beginPath();
+                                ctx.arc(x, y, radius * 0.6, 0, 2 * Math.PI);
+                                ctx.fillStyle = dataset.borderColor;
+                                ctx.globalAlpha = 0.5 + Math.sin(time * Math.PI) * 0.4;
+                                ctx.fill();
+                                ctx.restore();
+                                
+                                // Punto central sólido
+                                ctx.save();
+                                ctx.beginPath();
+                                ctx.arc(x, y, 6, 0, 2 * Math.PI);
+                                ctx.fillStyle = dataset.borderColor;
+                                ctx.globalAlpha = 1;
+                                ctx.fill();
+                                ctx.restore();
+                            }
+                        }
+                    });
+                }
+            };
+
             timelineChart = new Chart(ctx, {
                 type: 'line',
                 data: { datasets: datasets },
                 options: {
                     responsive: true,
                     maintainAspectRatio: false,
+                    animation: {
+                        duration: 750
+                    },
                     interaction: {
                         mode: 'nearest',
                         axis: 'x',
@@ -542,8 +626,18 @@
                             }
                         }
                     }
-                }
+                },
+                plugins: [pulsingPointPlugin]
             });
+            
+            // Animar el punto pulsante continuamente
+            const animatePulsingPoints = () => {
+                if (timelineChart) {
+                    timelineChart.update('none');
+                }
+                requestAnimationFrame(animatePulsingPoints);
+            };
+            requestAnimationFrame(animatePulsingPoints);
         }
 
         // Update clock
