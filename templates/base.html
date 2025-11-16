@@ -6,6 +6,12 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>{% block title %}{{ ctf_name }}{% endblock %}</title>
     
+    <!-- Favicon -->
+    {% if ctf_config.logo %}
+        <link rel="icon" type="image/x-icon" href="{{ ctf_config.logo.url }}">
+        <link rel="shortcut icon" type="image/x-icon" href="{{ ctf_config.logo.url }}">
+    {% endif %}
+    
     <!-- Tailwind CSS + DaisyUI -->
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
@@ -58,7 +64,12 @@
                     {% endif %}
                 </ul>
             </div>
-            <a href="/" class="btn btn-ghost text-xl font-gaming font-bold">{{ ctf_name }}</a>
+            <a href="/" class="btn btn-ghost text-xl font-gaming font-bold flex items-center gap-2">
+                {% if ctf_config.logo %}
+                    <img src="{{ ctf_config.logo.url }}" alt="{{ ctf_name }}" class="h-8 w-8 object-contain">
+                {% endif %}
+                <span>{{ ctf_name }}</span>
+            </a>
         </div>
         <div class="navbar-center hidden lg:flex">
             <ul class="menu menu-horizontal px-1">

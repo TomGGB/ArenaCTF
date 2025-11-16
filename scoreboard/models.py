@@ -12,6 +12,8 @@ class CTFConfig(models.Model):
     is_active = models.BooleanField(default=False, verbose_name="CTF Activo")
     first_blood_points = models.IntegerField(default=50, verbose_name="Puntos de First Blood")
     timezone = models.CharField(max_length=100, default="America/Argentina/Buenos_Aires", verbose_name="Zona Horaria")
+    logo = models.ImageField(upload_to='ctf_logos/', null=True, blank=True, verbose_name="Logo del CTF", 
+                            help_text="Logo personalizado (.png, .ico, .jpg). Se mostrará en el navbar y como favicon.")
     
     class Meta:
         verbose_name = "Configuración CTF"

@@ -62,7 +62,7 @@
                     {% endif %}
 
                     <!-- Form -->
-                    <form method="POST" class="space-y-6">
+                    <form method="POST" enctype="multipart/form-data" class="space-y-6">
                         {% csrf_token %}
                         
                         <!-- CTF Name -->
@@ -77,6 +77,22 @@
                                    class="input input-bordered input-warning w-full font-gaming text-xl">
                             <label class="label">
                                 <span class="label-text-alt opacity-60">Este nombre aparecerá en toda la plataforma</span>
+                            </label>
+                        </div>
+
+                        <!-- Logo -->
+                        <div class="form-control">
+                            <label class="label">
+                                <span class="label-text font-gaming text-lg">Logo del CTF (Opcional)</span>
+                            </label>
+                            <input type="file" 
+                                   name="logo" 
+                                   accept=".png,.ico,.jpg,.jpeg,.svg"
+                                   class="file-input file-input-bordered file-input-warning w-full">
+                            <label class="label">
+                                <span class="label-text-alt opacity-60">
+                                    📌 Soporta PNG, ICO, JPG o SVG. Se mostrará en el navbar y como favicon.
+                                </span>
                             </label>
                         </div>
 

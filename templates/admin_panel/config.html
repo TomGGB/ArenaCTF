@@ -16,7 +16,7 @@
             <div class="card-body">
                 <h2 class="card-title">⚙️ Configuración General</h2>
                 
-                <form method="POST" class="space-y-6 mt-4">
+                <form method="POST" enctype="multipart/form-data" class="space-y-6 mt-4">
                     {% csrf_token %}
                     
                     <div class="form-control">
@@ -29,6 +29,32 @@
                             <span class="label-text-alt">Nombre que se mostrará en toda la plataforma</span>
                         </label>
                     </div>
+
+                    <div class="form-control">
+                        <label class="label">
+                            <span class="label-text font-semibold">Logo del CTF</span>
+                        </label>
+                        {% if config.logo %}
+                        <div class="mb-3 p-4 bg-base-300 rounded-lg flex items-center gap-4">
+                            <img src="{{ config.logo.url }}" alt="Logo actual" class="h-16 w-16 object-contain">
+                            <div class="flex-1">
+                                <p class="text-sm font-semibold">Logo actual</p>
+                                <p class="text-xs opacity-60">{{ config.logo.name }}</p>
+                            </div>
+                            <label class="label cursor-pointer">
+                                <input type="checkbox" name="remove_logo" class="checkbox checkbox-error checkbox-sm">
+                                <span class="label-text ml-2 text-xs">Eliminar</span>
+                            </label>
+                        </div>
+                        {% endif %}
+                        <input type="file" name="logo" accept=".png,.ico,.jpg,.jpeg,.svg" 
+                               class="file-input file-input-bordered w-full">
+                        <label class="label">
+                            <span class="label-text-alt">Logo personalizado (PNG, ICO, JPG, SVG). Se mostrará en el navbar y como favicon.</span>
+                        </label>
+                    </div>
+
+                    <div class="divider"></div>
 
                     <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
                         <div class="form-control">

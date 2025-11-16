@@ -94,7 +94,7 @@ def public_display(request):
     recent_submissions = Submission.objects.filter(is_correct=True).select_related('team', 'challenge').order_by('-submitted_at')[:10]
     first_bloods = FirstBlood.objects.all().select_related('team', 'challenge').order_by('-achieved_at')[:10]
     
-    # Generar datos del timeline
+    # Generar datos del timeline (misma lógica que dashboard)
     timeline_list = []
     for team in teams:
         team_submissions = Submission.objects.filter(
@@ -102,24 +102,22 @@ def public_display(request):
             is_correct=True
         ).select_related('challenge').order_by('submitted_at')
         
-        team_first_bloods = FirstBlood.objects.filter(
-            team=team
-        ).order_by('achieved_at')
-        
         cumulative_score = 0
-        for sub in team_submissions:
-            cumulative_score += sub.challenge.points
+        for submission in team_submissions:
+            cumulative_score += submission.challenge.points
+            
+            # Agregar bonus de first blood si corresponde
+            first_blood = FirstBlood.objects.filter(
+                challenge=submission.challenge,
+                team=team
+            ).first()
+            
+            if first_blood:
+                cumulative_score += first_blood.bonus_points
+            
             timeline_list.append({
                 'team': team.name,
-                'time': sub.submitted_at.isoformat(),
-                'score': cumulative_score
-            })
-        
-        for fb in team_first_bloods:
-            cumulative_score += fb.bonus_points
-            timeline_list.append({
-                'team': team.name,
-                'time': fb.achieved_at.isoformat(),
+                'time': submission.submitted_at.isoformat(),
                 'score': cumulative_score
             })
     

@@ -438,7 +438,7 @@
             }, 4000);
         }
 
-        // Initialize timeline chart
+        // Initialize timeline chart (misma lógica que dashboard)
         function initTimelineChart(timelineData) {
             const ctx = document.getElementById('timelineChart');
             if (!ctx) return;
@@ -448,7 +448,11 @@
             teamColors['{{ team.name }}'] = '{{ team.color }}';
             {% endfor %}
 
+            // Preparar datasets por equipo
+            const datasets = [];
             const teamData = {};
+            
+            // Agrupar datos por equipo
             timelineData.forEach(point => {
                 if (!teamData[point.team]) {
                     teamData[point.team] = [];
@@ -459,21 +463,22 @@
                 });
             });
 
-            const datasets = Object.keys(teamData).map(teamName => ({
-                label: teamName,
-                data: teamData[teamName],
-                borderColor: teamColors[teamName] || '#00FF41',
-                backgroundColor: (teamColors[teamName] || '#00FF41') + '30',
-                borderWidth: 4,
-                tension: 0.4,
-                pointRadius: 5,
-                pointHoverRadius: 8,
-                pointBackgroundColor: teamColors[teamName] || '#00FF41',
-                pointBorderColor: '#1a1a2e',
-                pointBorderWidth: 2,
-                fill: false
-            }));
+            // Crear dataset para cada equipo
+            Object.keys(teamData).forEach(teamName => {
+                datasets.push({
+                    label: teamName,
+                    data: teamData[teamName],
+                    borderColor: teamColors[teamName] || '#00FF41',
+                    backgroundColor: (teamColors[teamName] || '#00FF41') + '20',
+                    borderWidth: 3,
+                    tension: 0.4,
+                    pointRadius: 4,
+                    pointHoverRadius: 6,
+                    fill: false
+                });
+            });
 
+            // Destruir gráfico anterior si existe
             if (timelineChart) {
                 timelineChart.destroy();
             }
@@ -492,25 +497,20 @@
                     plugins: {
                         legend: {
                             display: true,
-                            position: 'bottom',
+                            position: 'top',
                             labels: {
-                                font: { family: 'Rajdhani', size: 16, weight: 'bold' },
+                                font: { family: 'Rajdhani', size: 14 },
                                 color: '#a6adbb',
                                 usePointStyle: true,
-                                pointStyle: 'circle',
-                                padding: 20,
-                                boxWidth: 15,
-                                boxHeight: 15
+                                padding: 15
                             }
                         },
                         tooltip: {
-                            backgroundColor: 'rgba(0,0,0,0.9)',
-                            titleFont: { family: 'Rajdhani', size: 16, weight: 'bold' },
-                            bodyFont: { family: 'Space Mono', size: 14 },
-                            padding: 15,
-                            displayColors: true,
-                            borderColor: '#00FF41',
-                            borderWidth: 2
+                            backgroundColor: 'rgba(0,0,0,0.8)',
+                            titleFont: { family: 'Rajdhani', size: 14 },
+                            bodyFont: { family: 'Space Mono', size: 12 },
+                            padding: 12,
+                            displayColors: true
                         }
                     },
                     scales: {
@@ -518,36 +518,27 @@
                             type: 'time',
                             time: {
                                 unit: 'minute',
-                                displayFormats: { 
-                                    minute: 'HH:mm', 
-                                    hour: 'HH:mm' 
-                                },
+                                displayFormats: { minute: 'HH:mm', hour: 'HH:mm' },
                                 tooltipFormat: 'dd/MM HH:mm'
                             },
-                            grid: { 
-                                color: 'rgba(166,173,187,0.15)',
-                                lineWidth: 1
-                            },
+                            grid: { color: 'rgba(166,173,187,0.1)' },
                             ticks: {
-                                font: { family: 'Space Mono', size: 12 },
+                                font: { family: 'Space Mono', size: 10 },
                                 color: '#a6adbb'
                             }
                         },
                         y: {
                             beginAtZero: true,
-                            grid: { 
-                                color: 'rgba(166,173,187,0.15)',
-                                lineWidth: 1
-                            },
+                            grid: { color: 'rgba(166,173,187,0.1)' },
                             ticks: {
-                                font: { family: 'Space Mono', size: 12 },
+                                font: { family: 'Space Mono', size: 10 },
                                 color: '#a6adbb'
                             },
                             title: {
                                 display: true,
                                 text: 'Puntos',
-                                font: { family: 'Rajdhani', size: 16, weight: 'bold' },
-                                color: '#00FF41'
+                                font: { family: 'Rajdhani', size: 12 },
+                                color: '#a6adbb'
                             }
                         }
                     }
@@ -766,7 +757,8 @@
         }
 
         function updateTimelineChart(timelineData) {
-            if (timelineChart && timelineData) {
+            // Actualizar el gráfico con los nuevos datos desde WebSocket
+            if (timelineData && timelineData.length > 0) {
                 initTimelineChart(timelineData);
             }
         }

@@ -81,6 +81,7 @@ def configure_ctf(request):
         end_time = request.POST.get('end_time')
         is_active = request.POST.get('is_active') == 'on'
         create_sample_data = request.POST.get('create_sample_data') == 'on'
+        logo = request.FILES.get('logo')
         
         # Configurar CTF
         config = CTFConfig.get_config()
@@ -95,6 +96,11 @@ def configure_ctf(request):
             config.end_time = timezone.datetime.fromisoformat(end_time)
         
         config.is_active = is_active
+        
+        # Guardar logo si se proporciona
+        if logo:
+            config.logo = logo
+        
         config.save()
         
         # Crear datos de ejemplo si se solicita

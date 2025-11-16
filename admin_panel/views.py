@@ -558,6 +558,8 @@ def ctf_config(request):
         end_time = request.POST.get('end_time')
         first_blood_points = request.POST.get('first_blood_points')
         timezone_str = request.POST.get('timezone')
+        logo = request.FILES.get('logo')
+        remove_logo = request.POST.get('remove_logo') == 'on'
         
         if name:
             config.name = name
@@ -569,6 +571,16 @@ def ctf_config(request):
             config.first_blood_points = int(first_blood_points)
         if timezone_str:
             config.timezone = timezone_str
+        
+        # Manejar logo
+        if remove_logo and config.logo:
+            config.logo.delete()
+            config.logo = None
+        elif logo:
+            # Si hay un logo anterior, eliminarlo
+            if config.logo:
+                config.logo.delete()
+            config.logo = logo
         
         config.save()
         
