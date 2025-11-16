@@ -89,21 +89,19 @@
     </style>
 </head>
 <body class="min-h-screen">
-    <!-- Audio activation overlay -->
-    <div id="audioEnableOverlay" class="fixed inset-0 bg-black/80 backdrop-blur-sm z-[10000] flex items-center justify-center" style="display: none;">
-        <div class="card bg-base-300 shadow-2xl max-w-md">
-            <div class="card-body text-center">
-                <h2 class="text-3xl font-gaming font-bold mb-4">🔊 Activar Audio</h2>
-                <p class="mb-6 opacity-80">Haz clic para habilitar las notificaciones de audio en tiempo real</p>
-                <button onclick="enableAudio()" class="btn btn-primary btn-lg gap-2">
-                    <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z" />
-                    </svg>
-                    Activar Audio
-                </button>
-            </div>
-        </div>
-    </div>
+    <!-- Audio para notificaciones -->
+    <audio id="flag_solved" preload="auto">
+        <source src="{% static 'sounds/flag_solved.mp3' %}" type="audio/mpeg">
+    </audio>
+    <audio id="first_blood" preload="auto">
+        <source src="{% static 'sounds/first_blood.mp3' %}" type="audio/mpeg">
+    </audio>
+    <audio id="rank_up" preload="auto">
+        <source src="{% static 'sounds/rank_up.mp3' %}" type="audio/mpeg">
+    </audio>
+    <audio id="rank_down" preload="auto">
+        <source src="{% static 'sounds/rank_down.mp3' %}" type="audio/mpeg">
+    </audio>
 
     <div class="container mx-auto px-4 py-8">
         <!-- Header -->
@@ -120,10 +118,24 @@
                     <span class="ml-2">Última actualización: <span id="currentTime"></span></span>
                 </p>
             </div>
-            <button onclick="toggleAudio()" id="audioToggle" class="btn btn-primary gap-2">
-                <span id="audioIcon">🔊</span>
-                <span id="audioText">Audio</span>
-            </button>
+            <div class="flex items-center gap-3">
+                <!-- Contador de tiempo restante -->
+                <div id="ctfTimeCounter" class="hidden">
+                    <div class="badge badge-lg badge-primary font-gaming gap-3 px-6 py-4 text-xl">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <div class="flex items-center gap-2">
+                            <span id="timeLabel" class="text-sm opacity-70 uppercase font-semibold whitespace-nowrap"></span>
+                            <span id="timeDisplay" class="font-mono font-bold text-lg whitespace-nowrap">--:--:--</span>
+                        </div>
+                    </div>
+                </div>
+                <button onclick="toggleAudio()" id="audioToggle" class="btn btn-success gap-2">
+                    <span id="audioIcon">🔊</span>
+                    <span id="audioText">Audio</span>
+                </button>
+            </div>
         </div>
 
         <!-- Stats -->
@@ -297,79 +309,90 @@
 
     <script>
         let timelineChart;
-        let audioEnabled = false;
-        let soundQueue = [];
-        let isPlayingSound = false;
-        
-        // Audio files
-        const soundFiles = {
-            flag_solved: new Audio('{% static "sounds/flag_solved.mp3" %}'),
-            first_blood: new Audio('{% static "sounds/first_blood.mp3" %}'),
-            rank_up: new Audio('{% static "sounds/rank_up.mp3" %}'),
-            rank_down: new Audio('{% static "sounds/rank_down.mp3" %}')
-        };
+        let audioEnabled = true;
+        let audioInitialized = false;
 
         // Notification queue
         let notificationQueue = [];
         let isShowingNotification = false;
 
-        // Initialize audio
+        // Inicializar audio con interacción del usuario
         function initializeAudio() {
-            Object.values(soundFiles).forEach(sound => {
-                sound.volume = 0;
-                sound.play().then(() => {
-                    sound.pause();
-                    sound.currentTime = 0;
+            if (audioInitialized) return;
+            
+            console.log('Inicializando audio...');
+            const audioElements = ['flag_solved', 'first_blood', 'rank_up', 'rank_down'];
+            
+            audioElements.forEach(id => {
+                const sound = document.getElementById(id);
+                if (sound) {
                     sound.volume = 0.7;
-                }).catch(e => console.log('Audio preload:', e));
+                    // Intentar cargar el audio
+                    sound.load();
+                    console.log(`Audio ${id} cargado`);
+                }
             });
-        }
-
-        function enableAudio() {
-            document.getElementById('audioEnableOverlay').style.display = 'none';
-            audioEnabled = true;
-            initializeAudio();
-            updateAudioStatus();
+            
+            audioInitialized = true;
+            console.log('✓ Audio inicializado correctamente');
         }
 
         function toggleAudio() {
+            // Inicializar audio en el primer clic
+            if (!audioInitialized) {
+                initializeAudio();
+            }
+            
             audioEnabled = !audioEnabled;
             updateAudioStatus();
+            console.log('Audio ' + (audioEnabled ? 'habilitado' : 'deshabilitado'));
         }
 
         function updateAudioStatus() {
             const icon = document.getElementById('audioIcon');
+            const button = document.getElementById('audioToggle');
             icon.textContent = audioEnabled ? '🔊' : '🔇';
+            
+            if (button) {
+                button.classList.remove('btn-success', 'btn-error');
+                button.classList.add(audioEnabled ? 'btn-success' : 'btn-error');
+            }
         }
 
-        function playSound(soundType) {
-            if (!audioEnabled || !soundFiles[soundType]) return;
-            soundQueue.push(soundType);
-            processSoundQueue();
-        }
-
-        function processSoundQueue() {
-            if (isPlayingSound || soundQueue.length === 0) return;
+        function playSound(soundId) {
+            console.log('playSound llamado:', soundId, 'audioEnabled:', audioEnabled, 'audioInitialized:', audioInitialized);
             
-            isPlayingSound = true;
-            const soundType = soundQueue.shift();
-            const sound = soundFiles[soundType];
+            if (!audioEnabled) {
+                console.log('Audio deshabilitado por el usuario');
+                return;
+            }
             
-            if (sound) {
-                sound.currentTime = 0;
-                sound.play().then(() => {
-                    sound.onended = () => {
-                        isPlayingSound = false;
-                        setTimeout(() => processSoundQueue(), 100);
-                    };
-                }).catch(e => {
-                    console.error('Error playing sound:', e);
-                    isPlayingSound = false;
-                    processSoundQueue();
-                });
-            } else {
-                isPlayingSound = false;
-                processSoundQueue();
+            // Inicializar audio si aún no se ha hecho
+            if (!audioInitialized) {
+                console.log('⚠️ Audio no inicializado. Haz clic en el botón de Audio para habilitar los sonidos.');
+                initializeAudio();
+            }
+            
+            try {
+                const sound = document.getElementById(soundId);
+                if (sound) {
+                    sound.currentTime = 0;
+                    sound.volume = 0.7;
+                    const playPromise = sound.play();
+                    
+                    if (playPromise !== undefined) {
+                        playPromise.then(() => {
+                            console.log('✓ Sonido reproducido:', soundId);
+                        }).catch(err => {
+                            console.error('✗ Error al reproducir sonido:', soundId, err);
+                            console.log('Tip: Haz clic en el botón de Audio para habilitar los sonidos');
+                        });
+                    }
+                } else {
+                    console.error('Elemento de audio no encontrado:', soundId);
+                }
+            } catch (err) {
+                console.error('Error al reproducir sonido:', err);
             }
         }
 
@@ -754,15 +777,122 @@
             document.getElementById('totalFirstBloods').textContent = data.first_bloods.length;
         }
 
+        // Variables para el contador de tiempo
+        let ctfEndTime = null;
+        let ctfStartTime = null;
+        let timerInterval = null;
+        
+        function startTimeCounter() {
+            const counterElement = document.getElementById('ctfTimeCounter');
+            const timeDisplay = document.getElementById('timeDisplay');
+            const timeLabel = document.getElementById('timeLabel');
+            
+            if (!counterElement || !timeDisplay || !timeLabel) return;
+            
+            counterElement.classList.remove('hidden');
+            
+            timerInterval = setInterval(() => {
+                if (!ctfEndTime || !ctfStartTime) {
+                    stopTimeCounter();
+                    return;
+                }
+                
+                const now = new Date();
+                const diffToEnd = ctfEndTime - now;
+                const diffToStart = ctfStartTime - now;
+                
+                const badge = timeDisplay.parentElement.parentElement;
+                
+                // CTF no ha iniciado
+                if (diffToStart > 0) {
+                    timeLabel.textContent = 'El CTF inicia en:';
+                    badge.classList.remove('badge-warning', 'badge-error');
+                    badge.classList.add('badge-info');
+                    
+                    const days = Math.floor(diffToStart / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diffToStart % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diffToStart % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diffToStart % (1000 * 60)) / 1000);
+                    
+                    if (days > 0) {
+                        timeDisplay.textContent = `${days}d ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    } else {
+                        timeDisplay.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    }
+                    
+                    // Si quedan menos de 5 segundos, recargar cuando llegue a 0
+                    if (diffToStart <= 5000) {
+                        stopTimeCounter();
+                        setTimeout(() => {
+                            location.reload();
+                        }, diffToStart);
+                    }
+                }
+                // CTF ha finalizado
+                else if (diffToEnd <= 0) {
+                    timeLabel.textContent = '';
+                    timeDisplay.textContent = '🏁 CTF FINALIZADO';
+                    badge.classList.remove('badge-primary', 'badge-warning', 'badge-info');
+                    badge.classList.add('badge-error');
+                    stopTimeCounter();
+                    return;
+                }
+                // CTF en curso
+                else {
+                    timeLabel.textContent = 'El CTF finaliza en:';
+                    
+                    const days = Math.floor(diffToEnd / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diffToEnd % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diffToEnd % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diffToEnd % (1000 * 60)) / 1000);
+                    
+                    // Cambiar color según el tiempo restante
+                    badge.classList.remove('badge-primary', 'badge-warning', 'badge-error', 'badge-info');
+                    
+                    if (diffToEnd <= 5 * 60 * 1000) { // Menos de 5 minutos
+                        badge.classList.add('badge-error');
+                    } else if (diffToEnd <= 15 * 60 * 1000) { // Menos de 15 minutos
+                        badge.classList.add('badge-warning');
+                    } else {
+                        badge.classList.add('badge-primary');
+                    }
+                    
+                    // Formato de display
+                    if (days > 0) {
+                        timeDisplay.textContent = `${days}d ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    } else {
+                        timeDisplay.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    }
+                }
+            }, 1000);
+        }
+        
+        function stopTimeCounter() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
+        
         // Initialize on load
-        document.addEventListener('DOMContentLoaded', function() {
+        document.addEventListener('DOMContentLoaded', async function() {
             const timelineData = {{ timeline_data|safe }};
             initTimelineChart(timelineData);
             updateClock();
             setInterval(updateClock, 1000);
             
-            // Set initial audio status (muted by default)
+            // Set initial audio status
             updateAudioStatus();
+            console.log('Audio habilitado:', audioEnabled);
+            console.log('💡 Haz clic en cualquier parte de la página o en el botón de Audio para habilitar los sonidos');
+            
+            // Inicializar audio en el primer clic en cualquier parte de la página
+            document.addEventListener('click', function initAudioOnClick() {
+                if (!audioInitialized) {
+                    console.log('Primer clic detectado, inicializando audio...');
+                    initializeAudio();
+                }
+            }, { once: true });
             
             // Initialize last activity
             {% if recent_submissions %}
@@ -773,73 +903,23 @@
                 document.getElementById('lastActivity').textContent = 'Sin actividad';
             {% endif %}
             
-            // Show audio overlay on first click
-            let hasInteracted = false;
-            document.addEventListener('click', function() {
-                if (!hasInteracted) {
-                    hasInteracted = true;
-                    document.getElementById('audioEnableOverlay').style.display = 'flex';
-                }
-            }, { once: true });
-        });
-
-        // Anti-DevTools Protection (Display público)
-        (function() {
-            // Detectar apertura de DevTools
-            let devtoolsOpen = false;
-            const threshold = 160;
-            
-            function detectDevTools() {
-                const widthThreshold = window.outerWidth - window.innerWidth > threshold;
-                const heightThreshold = window.outerHeight - window.innerHeight > threshold;
+            // Inicializar contador de tiempo
+            try {
+                const response = await fetch('/api/ctf-status/');
+                const data = await response.json();
                 
-                if ((widthThreshold || heightThreshold) && !devtoolsOpen) {
-                    devtoolsOpen = true;
-                    handleDevToolsOpen();
+                if (data.start_time) {
+                    ctfStartTime = new Date(data.start_time);
                 }
-            }
-            
-            function handleDevToolsOpen() {
-                document.body.innerHTML = `
-                    <div class="min-h-screen flex items-center justify-center bg-base-100">
-                        <div class="card w-96 bg-base-300 shadow-xl border-4 border-error">
-                            <div class="card-body text-center">
-                                <h2 class="text-6xl mb-4">🔒</h2>
-                                <h3 class="card-title text-2xl font-gaming text-error justify-center">Acceso Restringido</h3>
-                                <p class="text-lg mb-4">Esta pantalla de visualización está protegida.</p>
-                                <p class="text-sm opacity-60">Cierra las herramientas de desarrollo para continuar.</p>
-                                <div class="card-actions justify-center mt-4">
-                                    <button onclick="location.reload()" class="btn btn-primary btn-sm">Recargar Página</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            // Deshabilitar click derecho
-            document.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                return false;
-            });
-            
-            // Deshabilitar atajos de teclado
-            document.addEventListener('keydown', function(e) {
-                // F12, Ctrl+Shift+I/J/C, Ctrl+U, Ctrl+S
-                if (e.keyCode === 123 || 
-                    (e.ctrlKey && e.shiftKey && [73, 74, 67].includes(e.keyCode)) ||
-                    (e.ctrlKey && [85, 83].includes(e.keyCode))) {
-                    e.preventDefault();
-                    return false;
+                
+                if (data.end_time) {
+                    ctfEndTime = new Date(data.end_time);
+                    startTimeCounter();
                 }
-            });
-            
-            // Detectar periódicamente
-            setInterval(detectDevTools, 1000);
-            
-            // Detección inicial
-            detectDevTools();
-        })();
+            } catch (error) {
+                console.error('Error al obtener estado del CTF:', error);
+            }
+        });
     </script>
 </body>
 </html>

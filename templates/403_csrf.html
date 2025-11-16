@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>500 - Error del Servidor</title>
+    <title>403 - Error CSRF</title>
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
     <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
@@ -18,7 +18,7 @@
         .error-code { 
             font-size: 8rem; 
             font-weight: 700;
-            background: linear-gradient(135deg, #ef4444 0%, #991b1b 100%);
+            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
             -webkit-background-clip: text;
             -webkit-text-fill-color: transparent;
             background-clip: text;
@@ -28,53 +28,58 @@
 <body class="min-h-screen bg-base-100 flex items-center justify-center p-4">
     <div class="max-w-2xl w-full fade-in">
         <div class="text-center mb-8">
-            <h1 class="error-code mb-2">500</h1>
-            <p class="text-xl text-base-content/70">Error del servidor</p>
+            <h1 class="error-code mb-2">403</h1>
+            <p class="text-xl text-base-content/70">Error de verificación CSRF</p>
         </div>
         
         <div class="card bg-base-200 shadow-lg">
             <div class="card-body">
                 <div class="space-y-4">
-                    <div class="alert alert-error">
+                    <div class="alert alert-warning">
                         <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
-                        <span>Ocurrió un error inesperado en el servidor.</span>
+                        <span>El token de seguridad CSRF es inválido o ha expirado.</span>
                     </div>
                     
                     <div class="mockup-code bg-base-300 text-sm">
-                        <pre data-prefix="$"><code>process_request()</code></pre>
-                        <pre data-prefix=">" class="text-error"><code>500 Internal Server Error</code></pre>
-                        <pre data-prefix=">" class="text-warning"><code>Error ID: {{ request_id|default:"UNKNOWN" }}</code></pre>
+                        <pre data-prefix="$"><code>csrf_verify()</code></pre>
+                        <pre data-prefix=">" class="text-warning"><code>403 CSRF Verification Failed</code></pre>
+                        {% if reason %}
+                        <pre data-prefix=">" class="text-error"><code>{{ reason }}</code></pre>
+                        {% endif %}
                     </div>
                     
                     <div class="text-sm text-base-content/60">
-                        <p>• El error ha sido registrado automáticamente</p>
-                        <p>• El equipo técnico ha sido notificado</p>
-                        <p>• Intenta nuevamente en unos momentos</p>
+                        <p class="font-semibold mb-2">Posibles soluciones:</p>
+                        <p>• Recarga la página e intenta nuevamente</p>
+                        <p>• Verifica que las cookies estén habilitadas</p>
+                        <p>• Cierra sesión y vuelve a iniciar</p>
+                        <p>• Limpia la caché del navegador</p>
+                    </div>
+                    
+                    <div class="alert alert-info">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                        </svg>
+                        <span class="text-xs">Esta protección previene ataques CSRF que podrían comprometer tu cuenta.</span>
                     </div>
                 </div>
                 
                 <div class="card-actions justify-end mt-6">
-                    <button onclick="location.reload()" class="btn btn-ghost">Reintentar</button>
+                    <button onclick="location.reload()" class="btn btn-ghost">Recargar</button>
                     <a href="/" class="btn btn-primary">Ir al Inicio</a>
                 </div>
             </div>
         </div>
         
         <div class="text-center mt-6 text-xs text-base-content/40 font-mono">
-            <p>Error ID: {{ request_id|default:"UNKNOWN" }} • <span id="timestamp"></span></p>
+            <p>Security ID: {{ request_id|default:"UNKNOWN" }} • <span id="timestamp"></span></p>
         </div>
     </div>
     
     <script>
         document.getElementById('timestamp').textContent = new Date().toLocaleString('es-CL');
-        document.addEventListener('contextmenu', e => e.preventDefault());
-        document.addEventListener('keydown', e => {
-            if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && [73,74,67].includes(e.keyCode)) || (e.ctrlKey && [85,83].includes(e.keyCode))) {
-                e.preventDefault();
-            }
-        });
     </script>
 </body>
 </html>

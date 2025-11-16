@@ -43,8 +43,9 @@ def challenge_list(request):
             is_correct=True
         ).values_list('challenge_id', flat=True)
     
-    # Verificar si el CTF ha terminado
+    # Verificar si el CTF ha terminado o no ha iniciado
     ctf_config = CTFConfig.get_config()
+    ctf_not_started = ctf_config.start_time and timezone.now() < ctf_config.start_time
     ctf_ended = ctf_config.end_time and timezone.now() > ctf_config.end_time
     
     context = {
@@ -52,6 +53,7 @@ def challenge_list(request):
         'challenges': challenges,
         'solved_challenges': solved_challenges,
         'user_team': user_team,
+        'ctf_not_started': ctf_not_started,
         'ctf_ended': ctf_ended,
         'ctf_config': ctf_config,
     }
@@ -84,11 +86,19 @@ def challenge_detail(request, challenge_id):
             is_correct=True
         ).exists()
     
+    # Estado del CTF
+    ctf_config = CTFConfig.get_config()
+    ctf_not_started = ctf_config.start_time and timezone.now() < ctf_config.start_time
+    ctf_ended = ctf_config.end_time and timezone.now() > ctf_config.end_time
+    
     context = {
         'challenge': challenge,
         'user_team': user_team,
         'solved': solved,
         'solve_count': challenge.get_solve_count(),
+        'ctf_config': ctf_config,
+        'ctf_not_started': ctf_not_started,
+        'ctf_ended': ctf_ended,
     }
     
     return render(request, 'challenges/detail.html', context)

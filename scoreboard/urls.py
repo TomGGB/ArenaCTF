@@ -9,4 +9,5 @@ urlpatterns = [
     path('achievements/', views.achievements_list, name='achievements'),
     path('api/scoreboard/', views.get_scoreboard_data, name='api_scoreboard'),
     path('api/display/', views.get_display_data, name='api_display'),
+    path('api/ctf-status/', views.get_ctf_status, name='api_ctf_status'),
 ]

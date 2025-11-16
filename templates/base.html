@@ -74,6 +74,19 @@
             </ul>
         </div>
         <div class="navbar-end gap-2">
+            <!-- Contador de tiempo restante -->
+            <div id="ctfTimeCounter" class="hidden">
+                <div class="badge badge-lg badge-primary font-gaming gap-2 px-5 py-3 text-base">
+                    <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
+                    </svg>
+                    <div class="flex items-center gap-2">
+                        <span id="timeLabel" class="text-xs opacity-70 uppercase font-semibold whitespace-nowrap"></span>
+                        <span id="timeDisplay" class="font-mono font-bold whitespace-nowrap">--:--:--</span>
+                    </div>
+                </div>
+            </div>
+            
             {% if user.is_authenticated %}
                 <div class="dropdown dropdown-end">
                     <div tabindex="0" role="button" class="btn btn-ghost btn-circle avatar">
@@ -154,14 +167,27 @@
     <script>
         const ws = new WebSocket('ws://' + window.location.host + '/ws/scoreboard/');
         
+        // Variables para el contador de tiempo
+        let ctfEndTime = null;
+        let timerInterval = null;
+        
         ws.onmessage = function(e) {
             const data = JSON.parse(e.data);
+            
+            // Actualizar tiempo del CTF si viene en los datos
+            if (data.ctf_end_time) {
+                ctfEndTime = new Date(data.ctf_end_time);
+                if (!timerInterval) {
+                    startTimeCounter();
+                }
+            }
             
             // Solo manejar notificaciones de tiempo del CTF con modales
             if (data.type === 'ctf_time_warning') {
                 showTimeWarning(data.message, data.minutes_left);
             } else if (data.type === 'ctf_ended') {
                 showCTFEnded(data.message);
+                stopTimeCounter();
             }
             // Manejar anuncios personalizados
             else if (data.type === 'custom_announcement') {
@@ -177,6 +203,120 @@
                 setTimeout(() => location.reload(), 2000);
             }
         };
+        
+        // Variables para start time
+        let ctfStartTime = null;
+        
+        // Inicializar contador de tiempo al cargar la página
+        window.addEventListener('DOMContentLoaded', async () => {
+            try {
+                const response = await fetch('/api/ctf-status/');
+                const data = await response.json();
+                
+                if (data.start_time) {
+                    ctfStartTime = new Date(data.start_time);
+                }
+                
+                if (data.end_time) {
+                    ctfEndTime = new Date(data.end_time);
+                    startTimeCounter();
+                }
+            } catch (error) {
+                console.error('Error al obtener estado del CTF:', error);
+            }
+        });
+        
+        function startTimeCounter() {
+            const counterElement = document.getElementById('ctfTimeCounter');
+            const timeDisplay = document.getElementById('timeDisplay');
+            const timeLabel = document.getElementById('timeLabel');
+            
+            if (!counterElement || !timeDisplay || !timeLabel) return;
+            
+            counterElement.classList.remove('hidden');
+            
+            timerInterval = setInterval(() => {
+                if (!ctfEndTime || !ctfStartTime) {
+                    stopTimeCounter();
+                    return;
+                }
+                
+                const now = new Date();
+                const diffToEnd = ctfEndTime - now;
+                const diffToStart = ctfStartTime - now;
+                
+                const badge = timeDisplay.parentElement.parentElement;
+                
+                // CTF no ha iniciado
+                if (diffToStart > 0) {
+                    timeLabel.textContent = 'El CTF inicia en:';
+                    badge.classList.remove('badge-warning', 'badge-error');
+                    badge.classList.add('badge-info');
+                    
+                    const days = Math.floor(diffToStart / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diffToStart % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diffToStart % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diffToStart % (1000 * 60)) / 1000);
+                    
+                    if (days > 0) {
+                        timeDisplay.textContent = `${days}d ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    } else {
+                        timeDisplay.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    }
+                    
+                    // Si quedan menos de 5 segundos, recargar cuando llegue a 0
+                    if (diffToStart <= 5000) {
+                        stopTimeCounter();
+                        setTimeout(() => {
+                            location.reload();
+                        }, diffToStart);
+                    }
+                }
+                // CTF ha finalizado
+                else if (diffToEnd <= 0) {
+                    timeLabel.textContent = '';
+                    timeDisplay.textContent = 'CTF FINALIZADO';
+                    badge.classList.remove('badge-primary', 'badge-warning', 'badge-info');
+                    badge.classList.add('badge-error');
+                    stopTimeCounter();
+                    return;
+                }
+                // CTF en curso
+                else {
+                    timeLabel.textContent = 'El CTF finaliza en:';
+                    
+                    const days = Math.floor(diffToEnd / (1000 * 60 * 60 * 24));
+                    const hours = Math.floor((diffToEnd % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutes = Math.floor((diffToEnd % (1000 * 60 * 60)) / (1000 * 60));
+                    const seconds = Math.floor((diffToEnd % (1000 * 60)) / 1000);
+                    
+                    // Cambiar color según el tiempo restante
+                    badge.classList.remove('badge-primary', 'badge-warning', 'badge-error', 'badge-info');
+                    
+                    if (diffToEnd <= 5 * 60 * 1000) { // Menos de 5 minutos
+                        badge.classList.add('badge-error');
+                    } else if (diffToEnd <= 15 * 60 * 1000) { // Menos de 15 minutos
+                        badge.classList.add('badge-warning');
+                    } else {
+                        badge.classList.add('badge-primary');
+                    }
+                    
+                    // Formato de display
+                    if (days > 0) {
+                        timeDisplay.textContent = `${days}d ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    } else {
+                        timeDisplay.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                    }
+                }
+            }, 1000);
+        }
+        
+        function stopTimeCounter() {
+            if (timerInterval) {
+                clearInterval(timerInterval);
+                timerInterval = null;
+            }
+        }
 
         function playSound(soundId) {
             try {
@@ -306,95 +446,6 @@
                 document.getElementById('timeWarningModal').close();
             }
         });
-
-        // Anti-DevTools Protection
-        {% if not user.is_staff %}
-        (function() {
-            // Detectar apertura de DevTools por tamaño de ventana
-            let devtoolsOpen = false;
-            const threshold = 160;
-            
-            function detectDevTools() {
-                const widthThreshold = window.outerWidth - window.innerWidth > threshold;
-                const heightThreshold = window.outerHeight - window.innerHeight > threshold;
-                
-                if ((widthThreshold || heightThreshold) && !devtoolsOpen) {
-                    devtoolsOpen = true;
-                    handleDevToolsOpen();
-                }
-            }
-            
-            // Detectar uso de debugger
-            function detectDebugger() {
-                const start = new Date();
-                debugger;
-                const end = new Date();
-                if (end - start > 100) {
-                    handleDevToolsOpen();
-                }
-            }
-            
-            function handleDevToolsOpen() {
-                document.body.innerHTML = `
-                    <div class="min-h-screen flex items-center justify-center bg-base-100">
-                        <div class="card w-96 bg-base-300 shadow-xl border-4 border-error">
-                            <div class="card-body text-center">
-                                <h2 class="text-6xl mb-4">🔒</h2>
-                                <h3 class="card-title text-2xl font-gaming text-error justify-center">Acceso Restringido</h3>
-                                <p class="text-lg mb-4">Las herramientas de desarrollo están deshabilitadas durante el CTF.</p>
-                                <p class="text-sm opacity-60">Cierra las DevTools para continuar.</p>
-                                <div class="card-actions justify-center mt-4">
-                                    <button onclick="location.reload()" class="btn btn-primary btn-sm">Recargar Página</button>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                `;
-            }
-            
-            // Deshabilitar click derecho
-            document.addEventListener('contextmenu', function(e) {
-                e.preventDefault();
-                showCustomAnnouncement(
-                    '⚠️ Advertencia',
-                    'El menú contextual está deshabilitado durante el CTF.',
-                    'warning'
-                );
-                return false;
-            });
-            
-            // Deshabilitar atajos de teclado comunes para DevTools
-            document.addEventListener('keydown', function(e) {
-                // F12
-                if (e.keyCode === 123) {
-                    e.preventDefault();
-                    return false;
-                }
-                // Ctrl+Shift+I, Ctrl+Shift+J, Ctrl+Shift+C
-                if (e.ctrlKey && e.shiftKey && (e.keyCode === 73 || e.keyCode === 74 || e.keyCode === 67)) {
-                    e.preventDefault();
-                    return false;
-                }
-                // Ctrl+U (Ver código fuente)
-                if (e.ctrlKey && e.keyCode === 85) {
-                    e.preventDefault();
-                    return false;
-                }
-                // Ctrl+S (Guardar página)
-                if (e.ctrlKey && e.keyCode === 83) {
-                    e.preventDefault();
-                    return false;
-                }
-            });
-            
-            // Detectar periódicamente
-            setInterval(detectDevTools, 1000);
-            setInterval(detectDebugger, 5000);
-            
-            // Detección inicial
-            detectDevTools();
-        })();
-        {% endif %}
     </script>
 
     {% block extra_js %}{% endblock %}

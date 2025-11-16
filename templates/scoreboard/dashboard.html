@@ -9,6 +9,25 @@
 
 {% block content %}
 <div class="container mx-auto px-4 py-8">
+    <!-- Mensajes de estado del CTF -->
+    {% if ctf_not_started %}
+    <div class="alert alert-info shadow-lg mb-6">
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <div>
+            <h3 class="font-bold">⏳ El CTF aún no ha comenzado</h3>
+            <div class="text-xs">El evento iniciará el {{ ctf_config.start_time|date:"d/m/Y" }} a las {{ ctf_config.start_time|date:"H:i" }}</div>
+        </div>
+    </div>
+    {% elif ctf_ended %}
+    <div class="alert alert-error shadow-lg mb-6">
+        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z" /></svg>
+        <div>
+            <h3 class="font-bold">🏁 El CTF ha finalizado</h3>
+            <div class="text-xs">El evento concluyó el {{ ctf_config.end_time|date:"d/m/Y" }} a las {{ ctf_config.end_time|date:"H:i" }}</div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- Header -->
     <div class="flex items-center justify-between mb-8">
         <div>

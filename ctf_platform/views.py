@@ -35,3 +35,12 @@ def custom_500(request):
         'request_id': str(uuid.uuid4())[:8].upper(),
     }
     return render(request, '500.html', context, status=500)
+
+
+def csrf_failure(request, reason=""):
+    """Handler personalizado para fallos CSRF"""
+    context = {
+        'request_id': str(uuid.uuid4())[:8].upper(),
+        'reason': reason,
+    }
+    return render(request, '403_csrf.html', context, status=403)

@@ -63,6 +63,11 @@ def dashboard(request):
                 'score': cumulative_score
             })
     
+    # Estado del CTF
+    ctf_config = CTFConfig.get_config()
+    ctf_not_started = ctf_config.start_time and timezone.now() < ctf_config.start_time
+    ctf_ended = ctf_config.end_time and timezone.now() > ctf_config.end_time
+    
     context = {
         'teams': teams,
         'recent_submissions': recent_submissions,
@@ -71,6 +76,9 @@ def dashboard(request):
         'recent_count': recent_count,
         'timeline_data': json.dumps(timeline_data),
         'last_update': timezone.now().astimezone(chile_tz).strftime('%d/%m/%Y %H:%M:%S'),
+        'ctf_config': ctf_config,
+        'ctf_not_started': ctf_not_started,
+        'ctf_ended': ctf_ended,
     }
     
     return render(request, 'scoreboard/dashboard.html', context)
@@ -521,3 +529,17 @@ def achievements_list(request):
     }
     
     return render(request, 'scoreboard/achievements.html', context)
+
+
+def get_ctf_status(request):
+    """API endpoint para obtener el estado actual del CTF"""
+    ctf_config = CTFConfig.get_config()
+    
+    data = {
+        'is_active': ctf_config.is_active,
+        'start_time': ctf_config.start_time.isoformat() if ctf_config.start_time else None,
+        'end_time': ctf_config.end_time.isoformat() if ctf_config.end_time else None,
+        'name': ctf_config.name,
+    }
+    
+    return JsonResponse(data)

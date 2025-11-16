@@ -1,9 +1,10 @@
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
 from django.db.models import Count
+from django.utils import timezone
 from .models import Team
 from challenges.models import Challenge, Submission, FirstBlood
-from scoreboard.models import Achievement
+from scoreboard.models import Achievement, CTFConfig
 
 def team_register(request):
     """Vista para registro de equipos"""
@@ -32,7 +33,18 @@ def team_list(request):
     
     # Si no tiene equipo, mostrar lista de equipos
     teams = Team.objects.all().order_by('-total_score')
-    return render(request, 'teams/list.html', {'teams': teams})
+    
+    # Estado del CTF
+    ctf_config = CTFConfig.get_config()
+    ctf_not_started = ctf_config.start_time and timezone.now() < ctf_config.start_time
+    ctf_ended = ctf_config.end_time and timezone.now() > ctf_config.end_time
+    
+    return render(request, 'teams/list.html', {
+        'teams': teams,
+        'ctf_config': ctf_config,
+        'ctf_not_started': ctf_not_started,
+        'ctf_ended': ctf_ended,
+    })
 
 def all_teams_list(request):
     """Vista para ver todos los equipos"""
@@ -43,9 +55,17 @@ def all_teams_list(request):
     if request.user.is_authenticated:
         user_team = request.user.teams.first()
     
+    # Estado del CTF
+    ctf_config = CTFConfig.get_config()
+    ctf_not_started = ctf_config.start_time and timezone.now() < ctf_config.start_time
+    ctf_ended = ctf_config.end_time and timezone.now() > ctf_config.end_time
+    
     return render(request, 'teams/all_teams.html', {
         'teams': teams,
-        'user_team': user_team
+        'user_team': user_team,
+        'ctf_config': ctf_config,
+        'ctf_not_started': ctf_not_started,
+        'ctf_ended': ctf_ended,
     })
 
 def team_detail(request, team_id):
@@ -144,6 +164,11 @@ def team_detail(request, team_id):
         (request.user in team.members.all() or request.user.is_staff or request.user.is_superuser)
     )
     
+    # Estado del CTF
+    ctf_config = CTFConfig.get_config()
+    ctf_not_started = ctf_config.start_time and timezone.now() < ctf_config.start_time
+    ctf_ended = ctf_config.end_time and timezone.now() > ctf_config.end_time
+    
     context = {
         'team': team,
         'solved_challenges': solved_challenges,
@@ -159,6 +184,9 @@ def team_detail(request, team_id):
         'member_stats': member_stats,
         'team_achievements': team_achievements,
         'can_view_invite_code': can_view_invite_code,
+        'ctf_config': ctf_config,
+        'ctf_not_started': ctf_not_started,
+        'ctf_ended': ctf_ended,
     }
     
     return render(request, 'teams/detail.html', context)

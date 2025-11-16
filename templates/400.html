@@ -5,120 +5,73 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>400 - Solicitud Incorrecta</title>
-    
-    <!-- Tailwind CSS + DaisyUI -->
     <link href="https://cdn.jsdelivr.net/npm/daisyui@4.12.10/dist/full.min.css" rel="stylesheet" type="text/css" />
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
-    
-    <script>
-        tailwind.config = {
-            theme: {
-                extend: {
-                    fontFamily: {
-                        'gaming': ['Rajdhani', 'sans-serif'],
-                        'mono': ['Space Mono', 'monospace'],
-                    }
-                }
-            }
-        }
-    </script>
-    
+    <link href="https://fonts.googleapis.com/css2?family=Rajdhani:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Rajdhani', sans-serif;
-        }
-        
+        body { font-family: 'Rajdhani', sans-serif; }
         @keyframes fadeIn {
-            from { opacity: 0; transform: translateY(20px); }
+            from { opacity: 0; transform: translateY(10px); }
             to { opacity: 1; transform: translateY(0); }
         }
-        
-        .fade-in {
-            animation: fadeIn 0.5s ease-out;
+        .fade-in { animation: fadeIn 0.4s ease-out; }
+        .error-code { 
+            font-size: 8rem; 
+            font-weight: 700;
+            background: linear-gradient(135deg, #f59e0b 0%, #b45309 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
         }
     </style>
 </head>
 <body class="min-h-screen bg-base-100 flex items-center justify-center p-4">
-    <div class="text-center fade-in">
-        <div class="mb-8">
-            <h1 class="text-9xl font-gaming font-bold text-warning mb-4">400</h1>
-            <div class="text-6xl mb-4">❌</div>
+    <div class="max-w-2xl w-full fade-in">
+        <div class="text-center mb-8">
+            <h1 class="error-code mb-2">400</h1>
+            <p class="text-xl text-base-content/70">Solicitud incorrecta</p>
         </div>
         
-        <div class="card bg-base-300 shadow-2xl border-4 border-warning max-w-2xl">
+        <div class="card bg-base-200 shadow-lg">
             <div class="card-body">
-                <h2 class="card-title text-4xl font-gaming justify-center text-warning mb-4">
-                    SOLICITUD INCORRECTA
-                </h2>
-                
-                <div class="divider"></div>
-                
                 <div class="space-y-4">
                     <div class="alert alert-warning">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-6 w-6" fill="none" viewBox="0 0 24 24">
+                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                             <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
                         </svg>
-                        <div>
-                            <h3 class="font-gaming font-bold">Petición inválida</h3>
-                            <div class="text-sm">El servidor no puede procesar la solicitud debido a un error del cliente.</div>
-                        </div>
+                        <span>El servidor no puede procesar esta solicitud.</span>
                     </div>
                     
-                    <div class="mockup-code text-left">
+                    <div class="mockup-code bg-base-300 text-sm">
                         <pre data-prefix="$"><code>parse_request()</code></pre>
-                        <pre data-prefix=">" class="text-warning"><code>HTTP 400 - Bad Request</code></pre>
-                        <pre data-prefix=">" class="text-error"><code>Invalid or malformed request</code></pre>
+                        <pre data-prefix=">" class="text-warning"><code>400 Bad Request</code></pre>
+                        <pre data-prefix=">" class="text-error"><code>Invalid request format</code></pre>
                     </div>
                     
-                    <div class="alert alert-info">
-                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
-                        </svg>
-                        <div class="text-sm">
-                            Por favor, verifica los datos enviados e intenta nuevamente.
-                        </div>
+                    <div class="text-sm text-base-content/60">
+                        <p>• Verifica los datos enviados</p>
+                        <p>• Asegúrate de usar el formato correcto</p>
                     </div>
                 </div>
                 
-                <div class="divider"></div>
-                
-                <div class="card-actions justify-center gap-4">
-                    <a href="/" class="btn btn-primary btn-lg font-gaming gap-2">
-                        <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5" viewBox="0 0 20 20" fill="currentColor">
-                            <path d="M10.707 2.293a1 1 0 00-1.414 0l-7 7a1 1 0 001.414 1.414L4 10.414V17a1 1 0 001 1h2a1 1 0 001-1v-2a1 1 0 011-1h2a1 1 0 011 1v2a1 1 0 001 1h2a1 1 0 001-1v-6.586l.293.293a1 1 0 001.414-1.414l-7-7z" />
-                        </svg>
-                        Volver al Inicio
-                    </a>
-                    <button onclick="history.back()" class="btn btn-ghost btn-lg font-gaming">
-                        ← Regresar
-                    </button>
+                <div class="card-actions justify-end mt-6">
+                    <button onclick="history.back()" class="btn btn-ghost">Volver</button>
+                    <a href="/" class="btn btn-primary">Ir al Inicio</a>
                 </div>
             </div>
         </div>
         
-        <div class="mt-8 text-sm opacity-60">
-            <p class="font-mono">Request ID: {{ request_id|default:"UNKNOWN" }}</p>
-            <p class="font-mono">Timestamp: <span id="timestamp"></span></p>
+        <div class="text-center mt-6 text-xs text-base-content/40 font-mono">
+            <p>Request ID: {{ request_id|default:"UNKNOWN" }} • <span id="timestamp"></span></p>
         </div>
     </div>
     
     <script>
-        document.getElementById('timestamp').textContent = new Date().toISOString();
-        
-        // Prevenir DevTools
-        document.addEventListener('contextmenu', function(e) {
-            e.preventDefault();
-            return false;
-        });
-        
-        document.addEventListener('keydown', function(e) {
-            if (e.keyCode === 123 || 
-                (e.ctrlKey && e.shiftKey && [73, 74, 67].includes(e.keyCode)) ||
-                (e.ctrlKey && [85, 83].includes(e.keyCode))) {
+        document.getElementById('timestamp').textContent = new Date().toLocaleString('es-CL');
+        document.addEventListener('contextmenu', e => e.preventDefault());
+        document.addEventListener('keydown', e => {
+            if (e.keyCode === 123 || (e.ctrlKey && e.shiftKey && [73,74,67].includes(e.keyCode)) || (e.ctrlKey && [85,83].includes(e.keyCode))) {
                 e.preventDefault();
-                return false;
             }
         });
     </script>

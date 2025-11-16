@@ -25,6 +25,21 @@
         <p class="text-sm opacity-60">Resuelve los desafíos y gana puntos</p>
     </div>
 
+    <!-- CTF Not Started Alert -->
+    {% if ctf_not_started %}
+    <div class="alert alert-info shadow-lg mb-6">
+        <div class="flex items-center gap-3">
+            <svg xmlns="http://www.w3.org/2000/svg" class="stroke-current shrink-0 h-8 w-8" fill="none" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+            </svg>
+            <div>
+                <h3 class="font-gaming text-xl font-bold">🔒 Los desafíos aún no están disponibles</h3>
+                <div class="text-sm">El CTF iniciará el <strong>{{ ctf_config.start_time|date:"d/m/Y" }}</strong> a las <strong>{{ ctf_config.start_time|date:"H:i" }}</strong></div>
+            </div>
+        </div>
+    </div>
+    {% endif %}
+
     <!-- CTF Ended Alert -->
     {% if ctf_ended %}
     <div class="alert alert-error shadow-lg mb-6">
@@ -58,6 +73,23 @@
                 <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
                     {% for challenge in category.challenges.all %}
                     {% if challenge.is_active %}
+                    {% if ctf_not_started %}
+                    <!-- Shadow mode: CTF no ha iniciado -->
+                    <div class="card bg-base-200 border border-base-content/10 opacity-50 cursor-not-allowed" 
+                         style="border-color: {{ category.color }}">
+                        <div class="card-body p-3 relative">
+                            <div class="flex items-center justify-center h-20">
+                                <svg xmlns="http://www.w3.org/2000/svg" class="h-8 w-8 opacity-30" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                                </svg>
+                            </div>
+                            <div class="text-center">
+                                <div class="badge badge-ghost badge-sm font-mono opacity-50">??? pts</div>
+                            </div>
+                        </div>
+                    </div>
+                    {% else %}
+                    <!-- Normal mode: CTF activo o finalizado -->
                     <div class="card cursor-pointer transition-all {% if challenge.id in solved_challenges %}bg-success/10 border-2 border-success opacity-75{% else %}bg-base-200 border border-base-content/10 hover:border-success{% endif %}" 
                          style="{% if challenge.id not in solved_challenges %}border-color: {{ category.color }}{% endif %}"
                          onclick="openChallengeModal('{{ challenge.id }}');">
@@ -90,6 +122,7 @@
                             </div>
                         </div>
                     </div>
+                    {% endif %}
                     {% endif %}
                     {% endfor %}
                 </div>
