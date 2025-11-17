@@ -87,13 +87,36 @@
         <div class="navbar-end gap-2">
             <!-- Contador de tiempo restante -->
             <div id="ctfTimeCounter" class="hidden">
-                <div class="badge badge-lg badge-primary font-gaming gap-2 px-5 py-3 text-base">
+                <div class="badge badge-lg badge-primary font-gaming gap-2 px-4 py-3 flex items-center">
                     <svg xmlns="http://www.w3.org/2000/svg" class="h-5 w-5 flex-shrink-0" fill="none" viewBox="0 0 24 24" stroke="currentColor">
                         <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                     </svg>
-                    <div class="flex items-center gap-2">
-                        <span id="timeLabel" class="text-xs opacity-70 uppercase font-semibold whitespace-nowrap"></span>
-                        <span id="timeDisplay" class="font-mono font-bold whitespace-nowrap">--:--:--</span>
+                    <span id="timeLabel" class="text-xs opacity-70 uppercase font-semibold whitespace-nowrap"></span>
+                    <div class="grid auto-cols-max grid-flow-col gap-1 text-center">
+                        <div id="countdownDays" class="flex items-baseline gap-0.5" style="display:none;">
+                            <span class="countdown font-mono text-base font-bold">
+                                <span id="daysValue" style="--value:0;"></span>
+                            </span>
+                            <span class="text-xs opacity-70">d</span>
+                        </div>
+                        <div class="flex items-baseline gap-0.5">
+                            <span class="countdown font-mono text-base font-bold">
+                                <span id="hoursValue" style="--value:0;"></span>
+                            </span>
+                            <span class="text-xs opacity-70">h</span>
+                        </div>
+                        <div class="flex items-baseline gap-0.5">
+                            <span class="countdown font-mono text-base font-bold">
+                                <span id="minutesValue" style="--value:0;"></span>
+                            </span>
+                            <span class="text-xs opacity-70">m</span>
+                        </div>
+                        <div class="flex items-baseline gap-0.5">
+                            <span class="countdown font-mono text-base font-bold">
+                                <span id="secondsValue" style="--value:0;"></span>
+                            </span>
+                            <span class="text-xs opacity-70">s</span>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -239,10 +262,14 @@
         
         function startTimeCounter() {
             const counterElement = document.getElementById('ctfTimeCounter');
-            const timeDisplay = document.getElementById('timeDisplay');
             const timeLabel = document.getElementById('timeLabel');
+            const hoursValue = document.getElementById('hoursValue');
+            const minutesValue = document.getElementById('minutesValue');
+            const secondsValue = document.getElementById('secondsValue');
+            const daysValue = document.getElementById('daysValue');
+            const countdownDays = document.getElementById('countdownDays');
             
-            if (!counterElement || !timeDisplay || !timeLabel) return;
+            if (!counterElement || !timeLabel) return;
             
             counterElement.classList.remove('hidden');
             
@@ -256,11 +283,11 @@
                 const diffToEnd = ctfEndTime - now;
                 const diffToStart = ctfStartTime - now;
                 
-                const badge = timeDisplay.parentElement.parentElement;
+                const badge = counterElement.querySelector('.badge');
                 
                 // CTF no ha iniciado
                 if (diffToStart > 0) {
-                    timeLabel.textContent = 'El CTF inicia en:';
+                    timeLabel.textContent = 'Inicia en:';
                     badge.classList.remove('badge-warning', 'badge-error');
                     badge.classList.add('badge-info');
                     
@@ -270,10 +297,15 @@
                     const seconds = Math.floor((diffToStart % (1000 * 60)) / 1000);
                     
                     if (days > 0) {
-                        timeDisplay.textContent = `${days}d ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                        countdownDays.style.display = 'flex';
+                        daysValue.style.setProperty('--value', days);
                     } else {
-                        timeDisplay.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                        countdownDays.style.display = 'none';
                     }
+                    
+                    hoursValue.style.setProperty('--value', hours);
+                    minutesValue.style.setProperty('--value', minutes);
+                    secondsValue.style.setProperty('--value', seconds);
                     
                     // Si quedan menos de 5 segundos, recargar cuando llegue a 0
                     if (diffToStart <= 5000) {
@@ -285,8 +317,11 @@
                 }
                 // CTF ha finalizado
                 else if (diffToEnd <= 0) {
-                    timeLabel.textContent = '';
-                    timeDisplay.textContent = 'CTF FINALIZADO';
+                    timeLabel.textContent = 'FINALIZADO';
+                    countdownDays.style.display = 'none';
+                    hoursValue.style.setProperty('--value', 0);
+                    minutesValue.style.setProperty('--value', 0);
+                    secondsValue.style.setProperty('--value', 0);
                     badge.classList.remove('badge-primary', 'badge-warning', 'badge-info');
                     badge.classList.add('badge-error');
                     stopTimeCounter();
@@ -294,7 +329,7 @@
                 }
                 // CTF en curso
                 else {
-                    timeLabel.textContent = 'El CTF finaliza en:';
+                    timeLabel.textContent = 'Finaliza en:';
                     
                     const days = Math.floor(diffToEnd / (1000 * 60 * 60 * 24));
                     const hours = Math.floor((diffToEnd % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
@@ -312,12 +347,17 @@
                         badge.classList.add('badge-primary');
                     }
                     
-                    // Formato de display
+                    // Actualizar countdown
                     if (days > 0) {
-                        timeDisplay.textContent = `${days}d ${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                        countdownDays.style.display = 'flex';
+                        daysValue.style.setProperty('--value', days);
                     } else {
-                        timeDisplay.textContent = `${hours.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}:${seconds.toString().padStart(2, '0')}`;
+                        countdownDays.style.display = 'none';
                     }
+                    
+                    hoursValue.style.setProperty('--value', hours);
+                    minutesValue.style.setProperty('--value', minutes);
+                    secondsValue.style.setProperty('--value', seconds);
                 }
             }, 1000);
         }
