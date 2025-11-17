@@ -114,6 +114,11 @@
                             🔌 Test WebSocket
                         </a>
                     </li>
+                    <li>
+                        <a href="{% url 'admin_panel:api_management' %}" class="{% if 'api' in request.path %}active{% endif %}">
+                            🔑 API Management
+                        </a>
+                    </li>
                 </ul>
             </div>
         </div>

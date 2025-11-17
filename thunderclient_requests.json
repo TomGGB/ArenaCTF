@@ -1,0 +1,439 @@
+{
+  "clientName": "Thunder Client",
+  "collectionName": "ArenaCTF API",
+  "collectionId": "arenactf-api",
+  "dateExported": "2025-11-17",
+  "version": "1.0",
+  "folders": [
+    {
+      "id": "challenges-folder",
+      "name": "Challenges",
+      "containerId": "",
+      "created": "2025-11-17",
+      "sortNum": 10000
+    },
+    {
+      "id": "scoreboard-folder",
+      "name": "Scoreboard",
+      "containerId": "",
+      "created": "2025-11-17",
+      "sortNum": 20000
+    },
+    {
+      "id": "teams-folder",
+      "name": "Teams",
+      "containerId": "",
+      "created": "2025-11-17",
+      "sortNum": 30000
+    },
+    {
+      "id": "users-folder",
+      "name": "Users",
+      "containerId": "",
+      "created": "2025-11-17",
+      "sortNum": 40000
+    },
+    {
+      "id": "submissions-folder",
+      "name": "Submissions",
+      "containerId": "",
+      "created": "2025-11-17",
+      "sortNum": 50000
+    }
+  ],
+  "requests": [
+    {
+      "id": "req-1",
+      "name": "Get All Challenges",
+      "url": "http://localhost/api/v1/challenges/",
+      "method": "GET",
+      "sortNum": 10000,
+      "created": "2025-11-17",
+      "modified": "2025-11-17",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Token IHWY7QNz6GkUccdY48VIfE7Ys7mg8yXnD4qegsGabKQ_uGS5IMxE9ORY93f_S2iR"
+        }
+      ],
+      "containerId": "challenges-folder",
+      "tests": []
+    },
+    {
+      "id": "req-2",
+      "name": "Get Challenge by ID",
+      "url": "http://localhost/api/v1/challenges/1/",
+      "method": "GET",
+      "sortNum": 10001,
+      "created": "2025-11-17",
+      "modified": "2025-11-17",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Token IHWY7QNz6GkUccdY48VIfE7Ys7mg8yXnD4qegsGabKQ_uGS5IMxE9ORY93f_S2iR"
+        }
+      ],
+      "containerId": "challenges-folder",
+      "tests": []
+    },
+    {
+      "id": "req-3",
+      "name": "Submit Flag",
+      "url": "http://localhost/api/v1/challenges/1/attempt/",
+      "method": "POST",
+      "sortNum": 10002,
+      "created": "2025-11-17",
+      "modified": "2025-11-17",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Token IHWY7QNz6GkUccdY48VIfE7Ys7mg8yXnD4qegsGabKQ_uGS5IMxE9ORY93f_S2iR"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"flag\": \"FLAG{example_flag}\"\n}",
+        "form": []
+      },
+      "containerId": "challenges-folder",
+      "tests": []
+    },
+    {
+      "id": "req-4",
+      "name": "Get Challenge Solves",
+      "url": "http://localhost/api/v1/challenges/1/solves/",
+      "method": "GET",
+      "sortNum": 10003,
+      "created": "2025-11-17",
+      "modified": "2025-11-17",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Token IHWY7QNz6GkUccdY48VIfE7Ys7mg8yXnD4qegsGabKQ_uGS5IMxE9ORY93f_S2iR"
+        }
+      ],
+      "containerId": "challenges-folder",
+      "tests": []
+    },
+    {
+      "id": "req-5",
+      "name": "Get Challenge Files",
+      "url": "http://localhost/api/v1/challenges/1/files/",
+      "method": "GET",
+      "sortNum": 10004,
+      "created": "2025-11-17",
+      "modified": "2025-11-17",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Token IHWY7QNz6GkUccdY48VIfE7Ys7mg8yXnD4qegsGabKQ_uGS5IMxE9ORY93f_S2iR"
+        }
+      ],
+      "containerId": "challenges-folder",
+      "tests": []
+    },
+    {
+      "id": "req-6",
+      "name": "Get Scoreboard",
+      "url": "http://localhost/api/v1/scoreboard/",
+      "method": "GET",
+      "sortNum": 20000,
+      "created": "2025-11-17",
+      "modified": "2025-11-17",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Token IHWY7QNz6GkUccdY48VIfE7Ys7mg8yXnD4qegsGabKQ_uGS5IMxE9ORY93f_S2iR"
+        }
+      ],
+      "containerId": "scoreboard-folder",
+      "tests": []
+    },
+    {
+      "id": "req-7",
+      "name": "Get Top Teams",
+      "url": "http://localhost/api/v1/scoreboard/top/",
+      "method": "GET",
+      "sortNum": 20001,
+      "created": "2025-11-17",
+      "modified": "2025-11-17",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Token IHWY7QNz6GkUccdY48VIfE7Ys7mg8yXnD4qegsGabKQ_uGS5IMxE9ORY93f_S2iR"
+        }
+      ],
+      "containerId": "scoreboard-folder",
+      "tests": []
+    },
+    {
+      "id": "req-8",
+      "name": "Get Statistics",
+      "url": "http://localhost/api/v1/statistics/",
+      "method": "GET",
+      "sortNum": 20002,
+      "created": "2025-11-17",
+      "modified": "2025-11-17",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Token IHWY7QNz6GkUccdY48VIfE7Ys7mg8yXnD4qegsGabKQ_uGS5IMxE9ORY93f_S2iR"
+        }
+      ],
+      "containerId": "scoreboard-folder",
+      "tests": []
+    },
+    {
+      "id": "req-9",
+      "name": "Get All Teams",
+      "url": "http://localhost/api/v1/teams/",
+      "method": "GET",
+      "sortNum": 30000,
+      "created": "2025-11-17",
+      "modified": "2025-11-17",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Token IHWY7QNz6GkUccdY48VIfE7Ys7mg8yXnD4qegsGabKQ_uGS5IMxE9ORY93f_S2iR"
+        }
+      ],
+      "containerId": "teams-folder",
+      "tests": []
+    },
+    {
+      "id": "req-10",
+      "name": "Get Team by ID",
+      "url": "http://localhost/api/v1/teams/1/",
+      "method": "GET",
+      "sortNum": 30001,
+      "created": "2025-11-17",
+      "modified": "2025-11-17",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Token IHWY7QNz6GkUccdY48VIfE7Ys7mg8yXnD4qegsGabKQ_uGS5IMxE9ORY93f_S2iR"
+        }
+      ],
+      "containerId": "teams-folder",
+      "tests": []
+    },
+    {
+      "id": "req-11",
+      "name": "Create Team",
+      "url": "http://localhost/api/v1/teams/",
+      "method": "POST",
+      "sortNum": 30002,
+      "created": "2025-11-17",
+      "modified": "2025-11-17",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Token IHWY7QNz6GkUccdY48VIfE7Ys7mg8yXnD4qegsGabKQ_uGS5IMxE9ORY93f_S2iR"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"name\": \"New Team\",\n  \"affiliation\": \"University\"\n}",
+        "form": []
+      },
+      "containerId": "teams-folder",
+      "tests": []
+    },
+    {
+      "id": "req-12",
+      "name": "Join Team",
+      "url": "http://localhost/api/v1/teams/1/join/",
+      "method": "POST",
+      "sortNum": 30003,
+      "created": "2025-11-17",
+      "modified": "2025-11-17",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Token IHWY7QNz6GkUccdY48VIfE7Ys7mg8yXnD4qegsGabKQ_uGS5IMxE9ORY93f_S2iR"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"invite_code\": \"INVITE_CODE_HERE\"\n}",
+        "form": []
+      },
+      "containerId": "teams-folder",
+      "tests": []
+    },
+    {
+      "id": "req-13",
+      "name": "Leave Team",
+      "url": "http://localhost/api/v1/teams/1/leave/",
+      "method": "POST",
+      "sortNum": 30004,
+      "created": "2025-11-17",
+      "modified": "2025-11-17",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Token IHWY7QNz6GkUccdY48VIfE7Ys7mg8yXnD4qegsGabKQ_uGS5IMxE9ORY93f_S2iR"
+        }
+      ],
+      "containerId": "teams-folder",
+      "tests": []
+    },
+    {
+      "id": "req-14",
+      "name": "Get Team Solves",
+      "url": "http://localhost/api/v1/teams/1/solves/",
+      "method": "GET",
+      "sortNum": 30005,
+      "created": "2025-11-17",
+      "modified": "2025-11-17",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Token IHWY7QNz6GkUccdY48VIfE7Ys7mg8yXnD4qegsGabKQ_uGS5IMxE9ORY93f_S2iR"
+        }
+      ],
+      "containerId": "teams-folder",
+      "tests": []
+    },
+    {
+      "id": "req-15",
+      "name": "Get Current User",
+      "url": "http://localhost/api/v1/users/me/",
+      "method": "GET",
+      "sortNum": 40000,
+      "created": "2025-11-17",
+      "modified": "2025-11-17",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Token IHWY7QNz6GkUccdY48VIfE7Ys7mg8yXnD4qegsGabKQ_uGS5IMxE9ORY93f_S2iR"
+        }
+      ],
+      "containerId": "users-folder",
+      "tests": []
+    },
+    {
+      "id": "req-16",
+      "name": "Get All Users",
+      "url": "http://localhost/api/v1/users/",
+      "method": "GET",
+      "sortNum": 40001,
+      "created": "2025-11-17",
+      "modified": "2025-11-17",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Token IHWY7QNz6GkUccdY48VIfE7Ys7mg8yXnD4qegsGabKQ_uGS5IMxE9ORY93f_S2iR"
+        }
+      ],
+      "containerId": "users-folder",
+      "tests": []
+    },
+    {
+      "id": "req-17",
+      "name": "Get User by ID",
+      "url": "http://localhost/api/v1/users/1/",
+      "method": "GET",
+      "sortNum": 40002,
+      "created": "2025-11-17",
+      "modified": "2025-11-17",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Token IHWY7QNz6GkUccdY48VIfE7Ys7mg8yXnD4qegsGabKQ_uGS5IMxE9ORY93f_S2iR"
+        }
+      ],
+      "containerId": "users-folder",
+      "tests": []
+    },
+    {
+      "id": "req-18",
+      "name": "Update Current User",
+      "url": "http://localhost/api/v1/users/me/",
+      "method": "PATCH",
+      "sortNum": 40003,
+      "created": "2025-11-17",
+      "modified": "2025-11-17",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Token IHWY7QNz6GkUccdY48VIfE7Ys7mg8yXnD4qegsGabKQ_uGS5IMxE9ORY93f_S2iR"
+        },
+        {
+          "name": "Content-Type",
+          "value": "application/json"
+        }
+      ],
+      "body": {
+        "type": "json",
+        "raw": "{\n  \"affiliation\": \"New Affiliation\",\n  \"website\": \"https://example.com\"\n}",
+        "form": []
+      },
+      "containerId": "users-folder",
+      "tests": []
+    },
+    {
+      "id": "req-19",
+      "name": "Get User Solves",
+      "url": "http://localhost/api/v1/users/1/solves/",
+      "method": "GET",
+      "sortNum": 40004,
+      "created": "2025-11-17",
+      "modified": "2025-11-17",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Token IHWY7QNz6GkUccdY48VIfE7Ys7mg8yXnD4qegsGabKQ_uGS5IMxE9ORY93f_S2iR"
+        }
+      ],
+      "containerId": "users-folder",
+      "tests": []
+    },
+    {
+      "id": "req-20",
+      "name": "Get All Submissions",
+      "url": "http://localhost/api/v1/submissions/",
+      "method": "GET",
+      "sortNum": 50000,
+      "created": "2025-11-17",
+      "modified": "2025-11-17",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Token IHWY7QNz6GkUccdY48VIfE7Ys7mg8yXnD4qegsGabKQ_uGS5IMxE9ORY93f_S2iR"
+        }
+      ],
+      "containerId": "submissions-folder",
+      "tests": []
+    },
+    {
+      "id": "req-21",
+      "name": "Get My Submissions",
+      "url": "http://localhost/api/v1/submissions/mine/",
+      "method": "GET",
+      "sortNum": 50001,
+      "created": "2025-11-17",
+      "modified": "2025-11-17",
+      "headers": [
+        {
+          "name": "Authorization",
+          "value": "Token IHWY7QNz6GkUccdY48VIfE7Ys7mg8yXnD4qegsGabKQ_uGS5IMxE9ORY93f_S2iR"
+        }
+      ],
+      "containerId": "submissions-folder",
+      "tests": []
+    }
+  ]
+}

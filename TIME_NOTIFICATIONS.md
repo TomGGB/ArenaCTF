@@ -61,7 +61,7 @@ O configura un cron job:
 crontab -e
 
 # Agregar esta línea (ejecutar cada minuto)
-* * * * * cd /path/to/LanaCTF && python manage.py check_ctf_time
+* * * * * cd /path/to/ArenaCTF && python manage.py check_ctf_time
 ```
 
 ### Opción 3: Usando systemd (Linux)
@@ -75,8 +75,8 @@ After=network.target
 [Service]
 Type=simple
 User=www-data
-WorkingDirectory=/path/to/LanaCTF
-ExecStart=/usr/bin/python3 /path/to/LanaCTF/manage.py check_ctf_time
+WorkingDirectory=/path/to/ArenaCTF
+ExecStart=/usr/bin/python3 /path/to/ArenaCTF/manage.py check_ctf_time
 Restart=always
 RestartSec=60
 

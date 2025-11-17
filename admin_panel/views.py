@@ -902,3 +902,80 @@ def broadcast_test_event(request):
         })
     except Exception as e:
         return JsonResponse({'status': 'error', 'message': str(e)}, status=500)
+
+
+# === API MANAGEMENT ===
+
+@user_passes_test(is_admin)
+def api_management(request):
+    """Panel de gestión de API tokens y testing"""
+    from api.models import APIToken
+    
+    tokens = APIToken.objects.all().select_related('user').order_by('-created_at')
+    users = User.objects.all().order_by('username')
+    
+    context = {
+        'tokens': tokens,
+        'users': users,
+    }
+    
+    return render(request, 'admin_panel/api_management.html', context)
+
+
+@user_passes_test(is_admin)
+def api_create_token(request):
+    """Crear un nuevo token de API"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    
+    from api.models import APIToken
+    
+    try:
+        user_id = request.POST.get('user_id')
+        description = request.POST.get('description', '')
+        
+        if not user_id:
+            return JsonResponse({'success': False, 'error': 'Usuario requerido'}, status=400)
+        
+        user = get_object_or_404(User, id=user_id)
+        
+        token = APIToken.objects.create(
+            user=user,
+            description=description
+        )
+        
+        return JsonResponse({
+            'success': True,
+            'token': {
+                'key': token.key,
+                'description': token.description,
+                'user': token.user.username,
+                'created_at': token.created_at.isoformat()
+            }
+        })
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)
+
+
+@user_passes_test(is_admin)
+def api_delete_token(request):
+    """Eliminar un token de API"""
+    if request.method != 'POST':
+        return JsonResponse({'error': 'Método no permitido'}, status=405)
+    
+    from api.models import APIToken
+    import json
+    
+    try:
+        data = json.loads(request.body)
+        token_key = data.get('key')
+        
+        if not token_key:
+            return JsonResponse({'success': False, 'error': 'Key del token requerido'}, status=400)
+        
+        token = get_object_or_404(APIToken, key=token_key)
+        token.delete()
+        
+        return JsonResponse({'success': True, 'message': 'Token eliminado correctamente'})
+    except Exception as e:
+        return JsonResponse({'success': False, 'error': str(e)}, status=500)

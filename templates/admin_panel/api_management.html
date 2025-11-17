@@ -1,0 +1,419 @@
+{% extends 'admin_panel/base.html' %}
+
+{% block title %}API Management - Admin Panel{% endblock %}
+
+{% block admin_content %}
+<div class="space-y-6">
+    <!-- Header -->
+    <div class="flex items-center justify-between">
+        <h1 class="text-4xl font-gaming font-bold text-success">🔑 API Management</h1>
+    </div>
+
+    <!-- Tabs -->
+    <div role="tablist" class="tabs tabs-lifted tabs-lg">
+        <input type="radio" name="api_tabs" role="tab" class="tab font-gaming" aria-label="🔑 API Tokens" checked />
+        <div role="tabpanel" class="tab-content bg-base-200 border-base-300 rounded-box p-6">
+            <!-- API Tokens Section -->
+            <div class="space-y-4">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-2xl font-gaming font-bold">Tokens Activos</h2>
+                    <button class="btn btn-success btn-sm" onclick="createTokenModal.showModal()">
+                        ➕ Crear Token
+                    </button>
+                </div>
+
+                <!-- Tokens List -->
+                <div class="space-y-3">
+                    {% if tokens %}
+                        {% for token in tokens %}
+                        <div class="card bg-gradient-to-r from-primary to-secondary text-primary-content shadow-xl">
+                            <div class="card-body">
+                                <div class="flex justify-between items-start">
+                                    <div class="flex-1">
+                                        <h3 class="card-title font-mono text-sm">{{ token.key }}</h3>
+                                        <p class="opacity-80 mt-2">
+                                            <strong>Usuario:</strong> {{ token.user.username }}<br>
+                                            {% if token.description %}
+                                            <strong>Descripción:</strong> {{ token.description }}<br>
+                                            {% endif %}
+                                            <strong>Creado:</strong> {{ token.created_at|date:"d/m/Y H:i" }}<br>
+                                            {% if token.last_used %}
+                                            <strong>Último uso:</strong> {{ token.last_used|date:"d/m/Y H:i" }}
+                                            {% else %}
+                                            <strong>Estado:</strong> <span class="badge badge-warning">Nunca usado</span>
+                                            {% endif %}
+                                        </p>
+                                    </div>
+                                    <div class="flex gap-2">
+                                        <button class="btn btn-sm btn-ghost" onclick="copyToken('{{ token.key }}')">
+                                            📋 Copiar
+                                        </button>
+                                        <button class="btn btn-sm btn-error" onclick="deleteToken('{{ token.key }}')">
+                                            🗑️ Eliminar
+                                        </button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        {% endfor %}
+                    {% else %}
+                    <div class="alert alert-info">
+                        <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                        <span>No hay tokens de API creados. Crea uno para comenzar.</span>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+
+        <input type="radio" name="api_tabs" role="tab" class="tab font-gaming" aria-label="🧪 API Tester" />
+        <div role="tabpanel" class="tab-content bg-base-200 border-base-300 rounded-box p-6">
+            <!-- API Tester Section -->
+            <div class="space-y-4">
+                <h2 class="text-2xl font-gaming font-bold mb-4">Probar Endpoints</h2>
+                
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <form id="api-test-form" class="space-y-4">
+                            <!-- Method Selection -->
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text font-gaming">Método HTTP</span>
+                                </label>
+                                <select id="test-method" class="select select-bordered w-full">
+                                    <option value="GET">GET</option>
+                                    <option value="POST">POST</option>
+                                    <option value="PATCH">PATCH</option>
+                                    <option value="DELETE">DELETE</option>
+                                </select>
+                            </div>
+
+                            <!-- Endpoint URL -->
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text font-gaming">Endpoint</span>
+                                </label>
+                                <div class="join w-full">
+                                    <span class="join-item btn btn-disabled">/api/v1/</span>
+                                    <input type="text" id="test-endpoint" class="input input-bordered join-item w-full" 
+                                           placeholder="challenges/" value="challenges/">
+                                </div>
+                            </div>
+
+                            <!-- Authentication -->
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text font-gaming">Autenticación</span>
+                                </label>
+                                <select id="test-auth" class="select select-bordered w-full">
+                                    <option value="none">Sin autenticación</option>
+                                    <option value="session">Sesión actual</option>
+                                    <option value="token">Token de API</option>
+                                </select>
+                            </div>
+
+                            <!-- Token Input (shown when token auth selected) -->
+                            <div class="form-control hidden" id="token-input-container">
+                                <label class="label">
+                                    <span class="label-text font-gaming">API Token</span>
+                                </label>
+                                <input type="text" id="test-token" class="input input-bordered w-full" 
+                                       placeholder="Ingresa el token de API">
+                            </div>
+
+                            <!-- Request Body -->
+                            <div class="form-control">
+                                <label class="label">
+                                    <span class="label-text font-gaming">Body (JSON)</span>
+                                </label>
+                                <textarea id="test-body" class="textarea textarea-bordered font-mono h-32" 
+                                          placeholder='{"key": "value"}'></textarea>
+                            </div>
+
+                            <!-- Submit Button -->
+                            <button type="submit" class="btn btn-success w-full">
+                                🚀 Enviar Petición
+                            </button>
+                        </form>
+
+                        <!-- Response Section -->
+                        <div id="response-section" class="mt-6 hidden">
+                            <div class="divider font-gaming">RESPUESTA</div>
+                            <div class="stats shadow w-full">
+                                <div class="stat">
+                                    <div class="stat-title">Status Code</div>
+                                    <div class="stat-value" id="response-status">-</div>
+                                </div>
+                                <div class="stat">
+                                    <div class="stat-title">Tiempo</div>
+                                    <div class="stat-value text-sm" id="response-time">-</div>
+                                </div>
+                            </div>
+
+                            <div class="mockup-code mt-4">
+                                <pre id="response-body" class="text-sm"><code>Esperando respuesta...</code></pre>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Quick Test Buttons -->
+                <div class="card bg-base-100 shadow-xl">
+                    <div class="card-body">
+                        <h3 class="card-title font-gaming">⚡ Tests Rápidos</h3>
+                        <div class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                            <button class="btn btn-outline btn-sm" onclick="quickTest('GET', 'challenges/')">
+                                GET /challenges/
+                            </button>
+                            <button class="btn btn-outline btn-sm" onclick="quickTest('GET', 'scoreboard/')">
+                                GET /scoreboard/
+                            </button>
+                            <button class="btn btn-outline btn-sm" onclick="quickTest('GET', 'users/me/')">
+                                GET /users/me/
+                            </button>
+                            <button class="btn btn-outline btn-sm" onclick="quickTest('GET', 'statistics/')">
+                                GET /statistics/
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <input type="radio" name="api_tabs" role="tab" class="tab font-gaming" aria-label="📚 Documentation" />
+        <div role="tabpanel" class="tab-content bg-base-200 border-base-300 rounded-box p-6">
+            <!-- Documentation Section -->
+            <div class="space-y-4">
+                <h2 class="text-2xl font-gaming font-bold mb-4">Documentación de API</h2>
+                
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <a href="/api/docs/" target="_blank" class="card bg-gradient-to-br from-blue-500 to-blue-700 text-white shadow-xl hover:shadow-2xl transition-all">
+                        <div class="card-body items-center text-center">
+                            <h3 class="card-title text-2xl">📘 Swagger UI</h3>
+                            <p>Interfaz interactiva para explorar y probar la API</p>
+                        </div>
+                    </a>
+
+                    <a href="/api/redoc/" target="_blank" class="card bg-gradient-to-br from-green-500 to-green-700 text-white shadow-xl hover:shadow-2xl transition-all">
+                        <div class="card-body items-center text-center">
+                            <h3 class="card-title text-2xl">📗 ReDoc</h3>
+                            <p>Documentación detallada y elegante de la API</p>
+                        </div>
+                    </a>
+
+                    <a href="/api/schema/" target="_blank" class="card bg-gradient-to-br from-purple-500 to-purple-700 text-white shadow-xl hover:shadow-2xl transition-all">
+                        <div class="card-body items-center text-center">
+                            <h3 class="card-title text-2xl">📜 OpenAPI Schema</h3>
+                            <p>Esquema OpenAPI 3.0 en formato JSON</p>
+                        </div>
+                    </a>
+                </div>
+
+                <div class="alert alert-info shadow-lg">
+                    <svg xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24" class="stroke-current shrink-0 w-6 h-6"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path></svg>
+                    <div>
+                        <h3 class="font-bold">💡 Información de Autenticación</h3>
+                        <div class="text-xs">
+                            <p class="mt-2">La API soporta dos métodos de autenticación:</p>
+                            <ul class="list-disc list-inside mt-2">
+                                <li><strong>Session Auth:</strong> Usa tu sesión actual de Django (cookies)</li>
+                                <li><strong>Token Auth:</strong> Usa header <code>Authorization: Token YOUR_API_TOKEN</code></li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Create Token Modal -->
+<dialog id="createTokenModal" class="modal">
+    <div class="modal-box">
+        <h3 class="font-bold text-lg font-gaming">➕ Crear Nuevo Token</h3>
+        <form id="create-token-form" class="space-y-4 mt-4">
+            {% csrf_token %}
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text">Usuario</span>
+                </label>
+                <select name="user_id" class="select select-bordered w-full" required>
+                    <option value="">Selecciona un usuario</option>
+                    {% for user in users %}
+                    <option value="{{ user.id }}">{{ user.username }}</option>
+                    {% endfor %}
+                </select>
+            </div>
+
+            <div class="form-control">
+                <label class="label">
+                    <span class="label-text">Descripción (opcional)</span>
+                </label>
+                <input type="text" name="description" class="input input-bordered w-full" 
+                       placeholder="Ej: Token para integración externa">
+            </div>
+
+            <div class="modal-action">
+                <button type="button" class="btn" onclick="createTokenModal.close()">Cancelar</button>
+                <button type="submit" class="btn btn-success">Crear Token</button>
+            </div>
+        </form>
+    </div>
+    <form method="dialog" class="modal-backdrop">
+        <button>close</button>
+    </form>
+</dialog>
+
+<script>
+// Show/hide token input based on auth method
+document.getElementById('test-auth').addEventListener('change', function() {
+    const tokenContainer = document.getElementById('token-input-container');
+    if (this.value === 'token') {
+        tokenContainer.classList.remove('hidden');
+    } else {
+        tokenContainer.classList.add('hidden');
+    }
+});
+
+// Create Token Form
+document.getElementById('create-token-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const formData = new FormData(this);
+    
+    try {
+        const response = await fetch('{% url "admin_panel:api_create_token" %}', {
+            method: 'POST',
+            body: formData,
+            headers: {
+                'X-CSRFToken': document.querySelector('[name=csrfmiddlewaretoken]').value
+            }
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✅ Token creado exitosamente!\n\nKey: ' + data.token.key + '\n\nCopia este token ahora, no podrás verlo de nuevo.');
+            location.reload();
+        } else {
+            alert('❌ Error: ' + data.error);
+        }
+    } catch (error) {
+        alert('❌ Error al crear el token: ' + error.message);
+    }
+});
+
+// Copy Token
+function copyToken(token) {
+    navigator.clipboard.writeText(token).then(() => {
+        alert('✅ Token copiado al portapapeles!');
+    }).catch(err => {
+        alert('❌ Error al copiar: ' + err);
+    });
+}
+
+// Delete Token
+async function deleteToken(key) {
+    if (!confirm('¿Estás seguro de eliminar este token? Esta acción no se puede deshacer.')) {
+        return;
+    }
+    
+    try {
+        const response = await fetch('{% url "admin_panel:api_delete_token" %}', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+                'X-CSRFToken': '{{ csrf_token }}'
+            },
+            body: JSON.stringify({ key: key })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+            alert('✅ Token eliminado exitosamente');
+            location.reload();
+        } else {
+            alert('❌ Error: ' + data.error);
+        }
+    } catch (error) {
+        alert('❌ Error al eliminar el token: ' + error.message);
+    }
+}
+
+// API Test Form
+document.getElementById('api-test-form').addEventListener('submit', async function(e) {
+    e.preventDefault();
+    
+    const method = document.getElementById('test-method').value;
+    const endpoint = document.getElementById('test-endpoint').value;
+    const auth = document.getElementById('test-auth').value;
+    const token = document.getElementById('test-token').value;
+    const body = document.getElementById('test-body').value;
+    
+    const url = `/api/v1/${endpoint}`;
+    const headers = {
+        'Content-Type': 'application/json'
+    };
+    
+    // Add authentication
+    if (auth === 'token' && token) {
+        headers['Authorization'] = `Token ${token}`;
+    }
+    
+    const options = {
+        method: method,
+        headers: headers,
+        credentials: auth === 'session' ? 'include' : 'omit'
+    };
+    
+    // Add body for POST/PATCH/DELETE
+    if (['POST', 'PATCH', 'DELETE'].includes(method) && body) {
+        try {
+            options.body = body;
+        } catch (e) {
+            alert('❌ JSON inválido en el body');
+            return;
+        }
+    }
+    
+    // Show response section
+    document.getElementById('response-section').classList.remove('hidden');
+    document.getElementById('response-status').textContent = 'Enviando...';
+    document.getElementById('response-time').textContent = '-';
+    document.getElementById('response-body').textContent = 'Esperando respuesta...';
+    
+    const startTime = Date.now();
+    
+    try {
+        const response = await fetch(url, options);
+        const endTime = Date.now();
+        const responseTime = endTime - startTime;
+        
+        const responseData = await response.json();
+        
+        // Update status
+        document.getElementById('response-status').textContent = response.status;
+        document.getElementById('response-status').className = 'stat-value ' + 
+            (response.ok ? 'text-success' : 'text-error');
+        document.getElementById('response-time').textContent = responseTime + ' ms';
+        
+        // Format and show response
+        document.getElementById('response-body').textContent = JSON.stringify(responseData, null, 2);
+    } catch (error) {
+        document.getElementById('response-status').textContent = 'ERROR';
+        document.getElementById('response-status').className = 'stat-value text-error';
+        document.getElementById('response-body').textContent = 'Error: ' + error.message;
+    }
+});
+
+// Quick Test Function
+function quickTest(method, endpoint) {
+    document.getElementById('test-method').value = method;
+    document.getElementById('test-endpoint').value = endpoint;
+    document.getElementById('test-auth').value = 'session';
+    document.getElementById('test-body').value = '';
+    document.getElementById('api-test-form').scrollIntoView({ behavior: 'smooth' });
+}
+</script>
+{% endblock %}

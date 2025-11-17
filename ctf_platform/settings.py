@@ -32,12 +32,15 @@ INSTALLED_APPS = [
     'channels',
     'corsheaders',
     'rest_framework',
+    'django_filters',
+    'drf_spectacular',
     'users',
     'teams',
     'challenges',
     'scoreboard',
     'quickstart',
     'admin_panel',
+    'api',
 ]
 
 MIDDLEWARE = [
@@ -133,10 +136,68 @@ CORS_ALLOW_CREDENTIALS = True
 # REST Framework
 REST_FRAMEWORK = {
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',
+        'rest_framework.permissions.AllowAny',
     ],
     'DEFAULT_AUTHENTICATION_CLASSES': [
+        'api.authentication.APITokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 50,
+    'DEFAULT_FILTER_BACKENDS': [
+        'django_filters.rest_framework.DjangoFilterBackend',
+        'rest_framework.filters.SearchFilter',
+        'rest_framework.filters.OrderingFilter',
+    ],
+    'DEFAULT_SCHEMA_CLASS': 'drf_spectacular.openapi.AutoSchema',
+    'DEFAULT_RENDERER_CLASSES': [
+        'rest_framework.renderers.JSONRenderer',
+        'api.renderers.StaffBrowsableAPIRenderer',
+    ],
+}
+
+# DRF Spectacular (Swagger/OpenAPI)
+SPECTACULAR_SETTINGS = {
+    'TITLE': 'ArenaCTF API',
+    'DESCRIPTION': 'API REST para la plataforma CTF - Compatible con CTFd',
+    'VERSION': '1.0.0',
+    'SERVE_INCLUDE_SCHEMA': False,
+    'SCHEMA_PATH_PREFIX': '/api/v1',
+    'COMPONENT_SPLIT_REQUEST': True,
+    'TAGS': [
+        {'name': 'users', 'description': 'Gestión de usuarios'},
+        {'name': 'teams', 'description': 'Gestión de equipos'},
+        {'name': 'challenges', 'description': 'Gestión de challenges'},
+        {'name': 'categories', 'description': 'Categorías de challenges'},
+        {'name': 'submissions', 'description': 'Envíos de flags'},
+        {'name': 'first-bloods', 'description': 'Primeras sangres'},
+        {'name': 'scoreboard', 'description': 'Tabla de posiciones'},
+        {'name': 'statistics', 'description': 'Estadísticas del CTF'},
+        {'name': 'config', 'description': 'Configuración del CTF'},
+        {'name': 'achievements', 'description': 'Logros'},
+    ],
+    'SERVERS': [
+        {'url': '/', 'description': 'Current server'},
+    ],
+    'APPEND_COMPONENTS': {
+        'securitySchemes': {
+            'tokenAuth': {
+                'type': 'apiKey',
+                'in': 'header',
+                'name': 'Authorization',
+                'description': 'Token authentication using format: Token YOUR_API_TOKEN'
+            },
+            'sessionAuth': {
+                'type': 'apiKey',
+                'in': 'cookie',
+                'name': 'sessionid',
+                'description': 'Session authentication using Django session cookie'
+            }
+        }
+    },
+    'SECURITY': [
+        {'tokenAuth': []},
+        {'sessionAuth': []},
     ],
 }
 

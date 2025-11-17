@@ -42,4 +42,9 @@ urlpatterns = [
     # WebSocket Test
     path('test-websocket/', views.test_websocket, name='test_websocket'),
     path('broadcast-test-event/', views.broadcast_test_event, name='broadcast_test_event'),
+    
+    # API Management
+    path('api/', views.api_management, name='api_management'),
+    path('api/create-token/', views.api_create_token, name='api_create_token'),
+    path('api/delete-token/', views.api_delete_token, name='api_delete_token'),
 ]
